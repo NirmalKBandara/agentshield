@@ -36,3 +36,21 @@ direct browser calls during development.
 Compose waits for PostgreSQL readiness before starting FastAPI, then waits for
 FastAPI readiness before starting Next.js. Healthchecks provide observable
 runtime state; `depends_on` alone would only describe process startup order.
+
+## Demo agent flow (Days 3–5)
+
+```text
+Browser → Next.js /api/agent → FastAPI /api/v1/agent/run
+                                      ↓
+                   provider → strict JSON decision parser
+                                      ↓
+                  allowlisted registry → Pydantic validation
+                                      ↓
+              get_customer | send_email | issue_refund | fetch_url
+```
+
+The default provider is an offline deterministic request router. Ollama is an
+optional local provider using the same strict decision schema. A model cannot
+call a Python function directly: unknown tool names and invalid arguments stop
+before dispatch. All four tools use fictional fixtures; email, refunds, and URL
+fetching are simulations with no external side effects.
