@@ -1,8 +1,8 @@
 # AgentShield
 
-AgentShield is an AI-agent security gateway starter repository. This bootstrap
-delivers a working Next.js frontend, FastAPI backend, PostgreSQL database, and
-Docker Compose development stack.
+AgentShield is an AI-agent security gateway. This Days 1–5 MVP delivers a
+working Next.js frontend, FastAPI backend, PostgreSQL database, safe structured
+agent router, and four controlled demo tools in a Docker Compose stack.
 
 ## End-of-day result
 
@@ -12,6 +12,8 @@ Docker Compose development stack.
 - PostgreSQL: `localhost:5432`
 - Browser → Next.js proxy → FastAPI communication is visible on the home page.
 - FastAPI exposes separate liveness and database-readiness checks.
+- The playground routes natural language to validated, allowlisted demo tools.
+- Alembic reproduces the initial seven-table database schema.
 - Unit tests, an opt-in integration test, Docker healthchecks, and CI are included.
 
 ## Repository layout
@@ -45,6 +47,7 @@ Verify the services directly:
 ```bash
 curl http://localhost:8000/api/v1/health
 curl http://localhost:8000/api/v1/ready
+curl http://localhost:8000/health
 curl http://localhost:3000/api/backend-health
 ```
 
@@ -68,6 +71,7 @@ Start PostgreSQL first, then follow [docs/setup.md](docs/setup.md). In short:
 cp backend/.env.example backend/.env
 python3 -m venv backend/.venv
 backend/.venv/bin/pip install -r backend/requirements-dev.txt
+backend/.venv/bin/alembic -c backend/alembic.ini upgrade head
 backend/.venv/bin/uvicorn app.main:app --reload --app-dir backend
 ```
 
@@ -104,6 +108,9 @@ Copy templates before local use. Real `.env` files are ignored by Git.
 | `DATABASE_URL` | FastAPI | Async SQLAlchemy PostgreSQL URL |
 | `CORS_ORIGINS` | FastAPI | Comma-separated allowed browser origins |
 | `BACKEND_URL` | Next.js server | Internal FastAPI base URL; never exposed to browser JS |
+| `MODEL_PROVIDER` | FastAPI | `rules` (offline default) or optional local `ollama` |
+| `OLLAMA_BASE_URL` | FastAPI | Local Ollama API URL when selected |
+| `OLLAMA_MODEL` | FastAPI | Locally installed Ollama model name |
 
 ## Git and GitHub workflow
 
@@ -115,6 +122,7 @@ for the exact commands, PR flow, and recommended branch protection.
 
 - [Local development guide](docs/setup.md)
 - [Architecture and request flow](docs/architecture.md)
+- [Database schema and migrations](docs/database.md)
 - [Git and GitHub guide](docs/git-workflow.md)
 
 ## License

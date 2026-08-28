@@ -33,6 +33,7 @@ python3 -m venv backend/.venv
 backend/.venv/bin/pip install --upgrade pip
 backend/.venv/bin/pip install -r backend/requirements-dev.txt
 cp backend/.env.example backend/.env
+backend/.venv/bin/alembic -c backend/alembic.ini upgrade head
 backend/.venv/bin/uvicorn app.main:app --reload --app-dir backend
 ```
 
@@ -49,6 +50,10 @@ npm --prefix frontend run dev
 ```bash
 curl --fail http://localhost:8000/api/v1/health
 curl --fail http://localhost:8000/api/v1/ready
+curl --fail http://localhost:8000/health
+curl --fail -X POST http://localhost:8000/api/v1/agent/run \
+  -H 'content-type: application/json' \
+  -d '{"prompt":"Show customer 1002"}'
 curl --fail http://localhost:3000/api/backend-health
 backend/.venv/bin/ruff check backend
 backend/.venv/bin/pytest backend/tests
@@ -66,3 +71,11 @@ docker compose config --quiet
 - A liveness success with a readiness failure means FastAPI is running but
   PostgreSQL is unavailable or `DATABASE_URL` is incorrect.
 - Never commit `.env`; only commit the provided example files.
+
+## Model provider
+
+`MODEL_PROVIDER=rules` is the MVP default: a deterministic local router with no
+network, account, or model download requirement. It recognizes the four demo
+request shapes and is stable in CI. To experiment with a locally installed
+Ollama server, set `MODEL_PROVIDER=ollama` and configure `OLLAMA_BASE_URL` and
+`OLLAMA_MODEL`. Malformed model JSON fails closed and no tool is executed.
