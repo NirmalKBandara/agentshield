@@ -95,6 +95,7 @@ class ToolCall(Base):
     __table_args__ = (Index("ix_tool_calls_agent_created", "agent_id", "created_at"),)
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    request_id: Mapped[str] = mapped_column(String(128), index=True)
     agent_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("agents.id", ondelete="SET NULL"), nullable=True
     )

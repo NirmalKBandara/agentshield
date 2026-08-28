@@ -5,7 +5,7 @@ import pytest
 from sqlalchemy import select
 
 from app.core.database import SessionLocal
-from app.models import Agent, User
+from app.models import Agent, ToolCall, User
 
 
 @pytest.mark.asyncio
@@ -25,5 +25,22 @@ async def test_migrated_postgres_supports_create_and_read() -> None:
         assert stored is not None
         assert stored.display_name == "PostgreSQL CI"
 
+        tool_call = ToolCall(
+            request_id=f"postgres-{uuid.uuid4()}",
+            tool_name="get_customer",
+            arguments={"customer_id": "1002"},
+            result={"found": True},
+            status="succeeded",
+            duration_ms=1,
+        )
+        session.add(tool_call)
+        await session.commit()
+        stored_call = await session.scalar(
+            select(ToolCall).where(ToolCall.request_id == tool_call.request_id)
+        )
+        assert stored_call is not None
+        assert stored_call.status == "succeeded"
+
         await session.delete(stored)
+        await session.delete(stored_call)
         await session.commit()

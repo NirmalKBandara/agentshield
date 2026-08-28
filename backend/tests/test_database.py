@@ -14,7 +14,12 @@ def test_schema_supports_basic_create_and_read() -> None:
         agent = Agent(owner=user, name="Demo Agent", system_prompt="Use only approved tools")
         tool = Tool(name="get_customer", description="Demo lookup", input_schema={"type": "object"})
         permission = AgentPermission(agent=agent, tool=tool, allowed=True)
-        call = ToolCall(agent=agent, tool_name="get_customer", arguments={"customer_id": "1002"})
+        call = ToolCall(
+            agent=agent,
+            request_id="test-request",
+            tool_name="get_customer",
+            arguments={"customer_id": "1002"},
+        )
         event = SecurityEvent(tool_call=call, event_type="demo", severity="low", message="test")
         policy = Policy(name="Demo policy", rules={"allow": ["get_customer"]})
         session.add_all([user, agent, tool, permission, call, event, policy])

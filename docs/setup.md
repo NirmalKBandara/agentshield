@@ -52,8 +52,10 @@ curl --fail http://localhost:8000/api/v1/health
 curl --fail http://localhost:8000/api/v1/ready
 curl --fail http://localhost:8000/health
 curl --fail -X POST http://localhost:8000/api/v1/agent/run \
+  -H 'X-Request-ID: local-demo-1002' \
   -H 'content-type: application/json' \
   -d '{"prompt":"Show customer 1002"}'
+curl --fail 'http://localhost:8000/api/v1/agent/tool-calls?limit=10'
 curl --fail http://localhost:3000/api/backend-health
 backend/.venv/bin/ruff check backend
 backend/.venv/bin/pytest backend/tests

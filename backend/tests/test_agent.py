@@ -2,6 +2,7 @@ import pytest
 
 from app.agent.providers import RuleBasedLocalProvider, build_provider
 from app.agent.service import AgentService, InvalidModelOutputError, parse_decision
+from app.api.routes import agent as agent_routes
 from app.core.config import Settings
 from app.tools.registry import UnknownToolError, default_tool_registry
 
@@ -57,8 +58,67 @@ def test_unknown_model_provider_is_rejected() -> None:
 
 @pytest.mark.asyncio
 async def test_agent_endpoint_runs_end_to_end(client) -> None:
-    response = await client.post("/api/v1/agent/run", json={"prompt": "Show customer 1002"})
+    response = await client.post(
+        "/api/v1/agent/run",
+        json={"prompt": "Show customer 1002"},
+        headers={"X-Request-ID": "week-one-success"},
+    )
     assert response.status_code == 200
     payload = response.json()
     assert payload["decision"]["tool_name"] == "get_customer"
     assert payload["tool_result"]["found"] is True
+    assert payload["request_id"] == "week-one-success"
+    assert payload["tool_call_id"] is not None
+    assert response.headers["X-Request-ID"] == "week-one-success"
+
+    audit_response = await client.get("/api/v1/agent/tool-calls")
+    assert audit_response.status_code == 200
+    calls = audit_response.json()
+    assert len(calls) == 1
+    assert calls[0]["id"] == payload["tool_call_id"]
+    assert calls[0]["request_id"] == "week-one-success"
+    assert calls[0]["tool_name"] == "get_customer"
+    assert calls[0]["status"] == "succeeded"
+    assert calls[0]["result"]["found"] is True
+
+
+@pytest.mark.asyncio
+async def test_failed_tool_attempt_is_persisted_and_correlated(client, monkeypatch) -> None:
+    provider = StaticProvider(
+        '{"action":"tool","tool_name":"get_customer","arguments":{"customer_id":"bad"}}'
+    )
+    monkeypatch.setattr(
+        agent_routes,
+        "build_agent_service",
+        lambda session: AgentService(provider, default_tool_registry, session),
+    )
+
+    response = await client.post(
+        "/api/v1/agent/run",
+        json={"prompt": "Use malformed arguments"},
+        headers={"X-Request-ID": "week-one-failure"},
+    )
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": "The selected tool arguments failed validation; no tool was executed",
+        "request_id": "week-one-failure",
+    }
+
+    audit_response = await client.get("/api/v1/agent/tool-calls")
+    call = audit_response.json()[0]
+    assert call["request_id"] == "week-one-failure"
+    assert call["status"] == "failed"
+    assert call["tool_name"] == "get_customer"
+    assert call["result"]["error_type"] == "ValidationError"
+
+
+@pytest.mark.asyncio
+async def test_invalid_request_gets_generated_request_id(client) -> None:
+    response = await client.post(
+        "/api/v1/agent/run",
+        json={"prompt": ""},
+        headers={"X-Request-ID": "contains spaces"},
+    )
+    assert response.status_code == 422
+    assert response.json()["request_id"] == response.headers["X-Request-ID"]
+    assert response.json()["request_id"] != "contains spaces"
