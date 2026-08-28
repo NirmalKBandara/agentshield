@@ -11,6 +11,23 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: agentshield_test
+          POSTGRES_USER: agentshield
+          POSTGRES_PASSWORD: agentshield_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U agentshield -d agentshield_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://agentshield:agentshield_test_password@localhost:5432/agentshield_test
+      RUN_POSTGRES_TESTS: "1"
     defaults:
       run:
         working-directory: backend
@@ -21,6 +38,7 @@ jobs:
           python-version: "3.13"
           cache: pip
       - run: pip install -r requirements-dev.txt
+      - run: alembic upgrade head
       - run: ruff check .
       - run: pytest
 
