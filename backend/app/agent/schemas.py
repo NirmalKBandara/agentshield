@@ -1,3 +1,5 @@
+import uuid
+from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -33,3 +35,18 @@ class AgentRunResponse(BaseModel):
     decision: AgentDecision
     tool_result: dict[str, Any] | None = None
     provider: str
+    request_id: str
+    tool_call_id: uuid.UUID | None = None
+
+
+class ToolCallResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    request_id: str
+    tool_name: str
+    arguments: dict[str, Any]
+    result: dict[str, Any] | None
+    status: str
+    duration_ms: int | None
+    created_at: datetime

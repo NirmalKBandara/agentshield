@@ -1,8 +1,8 @@
 # AgentShield
 
-AgentShield is an AI-agent security gateway. This Days 1–5 MVP delivers a
-working Next.js frontend, FastAPI backend, PostgreSQL database, safe structured
-agent router, and four controlled demo tools in a Docker Compose stack.
+AgentShield is an AI-agent security gateway. The Week 1 milestone delivers a
+working Next.js playground, FastAPI backend, PostgreSQL audit storage, safe
+structured agent router, and four controlled demo tools in a Docker Compose stack.
 
 ## End-of-day result
 
@@ -13,7 +13,9 @@ agent router, and four controlled demo tools in a Docker Compose stack.
 - Browser → Next.js proxy → FastAPI communication is visible on the home page.
 - FastAPI exposes separate liveness and database-readiness checks.
 - The playground routes natural language to validated, allowlisted demo tools.
-- Alembic reproduces the initial seven-table database schema.
+- The UI separately displays the response, requested tool, arguments, and result.
+- Successful and failed tool attempts are persisted with request correlation IDs.
+- Alembic reproduces and upgrades the seven-table database schema.
 - Unit tests, an opt-in integration test, Docker healthchecks, and CI are included.
 
 ## Repository layout
@@ -49,7 +51,12 @@ curl http://localhost:8000/api/v1/health
 curl http://localhost:8000/api/v1/ready
 curl http://localhost:8000/health
 curl http://localhost:3000/api/backend-health
+curl http://localhost:8000/api/v1/agent/tool-calls
 ```
+
+Agent responses include `request_id` and `tool_call_id`. The same request ID is
+returned in the `X-Request-ID` header and can be supplied by clients using that
+header for end-to-end correlation.
 
 Stop the stack while preserving PostgreSQL data:
 

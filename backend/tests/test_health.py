@@ -54,4 +54,5 @@ async def test_readiness_when_database_is_unavailable(monkeypatch) -> None:
         response = await client.get("/api/v1/ready")
 
     assert response.status_code == 503
-    assert response.json() == {"detail": "Database is not ready"}
+    assert response.json()["detail"] == "Database is not ready"
+    assert response.json()["request_id"] == response.headers["X-Request-ID"]
