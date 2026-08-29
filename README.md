@@ -1,8 +1,9 @@
 # AgentShield
 
-AgentShield is an AI-agent security gateway. The Week 1 milestone delivers a
-working Next.js playground, FastAPI backend, PostgreSQL audit storage, safe
-structured agent router, and four controlled demo tools in a Docker Compose stack.
+AgentShield is an AI-agent security gateway. The Day 9 milestone delivers a
+working Next.js playground, FastAPI backend, PostgreSQL audit storage, a
+deny-by-default security gateway, and four controlled demo tools in a Docker
+Compose stack.
 
 ## End-of-day result
 
@@ -15,6 +16,9 @@ structured agent router, and four controlled demo tools in a Docker Compose stac
 - The playground routes natural language to validated, allowlisted demo tools.
 - The UI separately displays the response, requested tool, arguments, and result.
 - Successful and failed tool attempts are persisted with request correlation IDs.
+- Every application tool call passes through a fail-closed gateway.
+- Seeded agent permissions allow only explicitly authorized tools.
+- Blocked calls are persisted as tool-call and security-event audit records.
 - Alembic reproduces and upgrades the seven-table database schema.
 - Unit tests, an opt-in integration test, Docker healthchecks, and CI are included.
 

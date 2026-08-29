@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 import uuid
 from typing import Any
@@ -9,7 +10,7 @@ from app.agent.audit import ToolCallStore
 from app.agent.providers import AgentProvider, build_provider
 from app.agent.schemas import AgentDecision, AgentRunResponse
 from app.core.config import get_settings
-from app.gateway import SecurityContext, ToolGateway
+from app.gateway import GatewayBlockedError, SecurityContext, ToolGateway
 from app.models import ToolCall
 from app.tools.registry import default_tool_registry
 
@@ -20,6 +21,9 @@ class InvalidModelOutputError(ValueError):
 
 class ToolExecutionError(RuntimeError):
     """A known tool failed after its execution was attempted."""
+
+
+logger = logging.getLogger(__name__)
 
 
 def parse_decision(raw_output: str) -> AgentDecision:
@@ -38,16 +42,17 @@ class AgentService:
         provider: AgentProvider,
         gateway: ToolGateway,
         tool_call_store: ToolCallStore | None = None,
+        agent_id: uuid.UUID | None = None,
     ) -> None:
         self.provider = provider
         self.gateway = gateway
         self.tool_call_store = tool_call_store
+        self.agent_id = agent_id
 
     async def run(
         self,
         prompt: str,
         request_id: str = "untracked",
-        agent_id: uuid.UUID | None = None,
     ) -> AgentRunResponse:
         raw_output = await self.provider.decide(prompt, self.gateway.schemas())
         decision = parse_decision(raw_output)
@@ -58,10 +63,43 @@ class AgentService:
             started = time.perf_counter()
             try:
                 _, result = await self.gateway.execute(
-                    SecurityContext(request_id=request_id, agent_id=agent_id),
+                    SecurityContext(request_id=request_id, agent_id=self.agent_id),
                     decision.tool_name,
                     decision.arguments,
                 )
+            except GatewayBlockedError as exc:
+                risk_score = max(
+                    (result.risk_score for result in exc.decision.results), default=100
+                )
+                tool_call = await self._record_tool_call(
+                    request_id=request_id,
+                    tool_name=decision.tool_name,
+                    arguments=decision.arguments,
+                    result={"reason": exc.decision.reason, "risk_score": risk_score},
+                    status="blocked",
+                    started=started,
+                )
+                if self.tool_call_store is not None and tool_call is not None:
+                    await self.tool_call_store.record_blocked_event(
+                        tool_call_id=tool_call.id,
+                        request_id=request_id,
+                        agent_id=self.agent_id,
+                        tool_name=decision.tool_name,
+                        reason=exc.decision.reason,
+                        risk_score=risk_score,
+                    )
+                logger.warning(
+                    "Blocked tool call",
+                    extra={
+                        "event": "tool_call_blocked",
+                        "request_id": request_id,
+                        "agent_id": str(self.agent_id) if self.agent_id else None,
+                        "tool": decision.tool_name,
+                        "reason": exc.decision.reason,
+                        "risk_score": risk_score,
+                    },
+                )
+                raise
             except Exception as exc:
                 tool_call = await self._record_tool_call(
                     request_id=request_id,
@@ -106,6 +144,7 @@ class AgentService:
             return None
         return await self.tool_call_store.record(
             request_id=request_id,
+            agent_id=self.agent_id,
             tool_name=tool_name,
             arguments=arguments,
             result=result,
@@ -114,6 +153,15 @@ class AgentService:
         )
 
 
-def build_agent_service(tool_call_store: ToolCallStore | None = None) -> AgentService:
-    gateway = ToolGateway(default_tool_registry)
-    return AgentService(build_provider(get_settings()), gateway, tool_call_store)
+def build_agent_service(
+    tool_call_store: ToolCallStore | None = None,
+    *,
+    gateway: ToolGateway | None = None,
+    agent_id: uuid.UUID | None = None,
+) -> AgentService:
+    return AgentService(
+        build_provider(get_settings()),
+        gateway or ToolGateway(default_tool_registry),
+        tool_call_store,
+        agent_id,
+    )

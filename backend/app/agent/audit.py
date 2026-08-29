@@ -1,4 +1,6 @@
+import uuid
 from collections.abc import Sequence
+from decimal import Decimal
 from typing import Annotated, Any, Protocol
 
 from fastapi import Depends
@@ -6,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
-from app.models import ToolCall
+from app.models import SecurityEvent, ToolCall
 
 
 class ToolCallStore(Protocol):
@@ -14,12 +16,24 @@ class ToolCallStore(Protocol):
         self,
         *,
         request_id: str,
+        agent_id: uuid.UUID | None,
         tool_name: str,
         arguments: dict[str, Any],
         result: dict[str, Any] | None,
         status: str,
         duration_ms: int,
     ) -> ToolCall: ...
+
+    async def record_blocked_event(
+        self,
+        *,
+        tool_call_id: uuid.UUID,
+        request_id: str,
+        agent_id: uuid.UUID | None,
+        tool_name: str,
+        reason: str,
+        risk_score: int,
+    ) -> SecurityEvent: ...
 
     async def list_recent(self, limit: int) -> Sequence[ToolCall]: ...
 
@@ -32,6 +46,7 @@ class SqlAlchemyToolCallStore:
         self,
         *,
         request_id: str,
+        agent_id: uuid.UUID | None,
         tool_name: str,
         arguments: dict[str, Any],
         result: dict[str, Any] | None,
@@ -40,6 +55,7 @@ class SqlAlchemyToolCallStore:
     ) -> ToolCall:
         tool_call = ToolCall(
             request_id=request_id,
+            agent_id=agent_id,
             tool_name=tool_name,
             arguments=arguments,
             result=result,
@@ -50,6 +66,34 @@ class SqlAlchemyToolCallStore:
         await self.session.commit()
         await self.session.refresh(tool_call)
         return tool_call
+
+    async def record_blocked_event(
+        self,
+        *,
+        tool_call_id: uuid.UUID,
+        request_id: str,
+        agent_id: uuid.UUID | None,
+        tool_name: str,
+        reason: str,
+        risk_score: int,
+    ) -> SecurityEvent:
+        event = SecurityEvent(
+            tool_call_id=tool_call_id,
+            event_type="tool_call_blocked",
+            severity="warning",
+            message=reason,
+            details={
+                "request_id": request_id,
+                "agent_id": str(agent_id) if agent_id else None,
+                "tool": tool_name,
+                "reason": reason,
+            },
+            risk_score=Decimal(risk_score),
+        )
+        self.session.add(event)
+        await self.session.commit()
+        await self.session.refresh(event)
+        return event
 
     async def list_recent(self, limit: int) -> Sequence[ToolCall]:
         rows = await self.session.scalars(
