@@ -1,10 +1,12 @@
+import uuid
+
 import pytest
 
 from app.agent.providers import RuleBasedLocalProvider, build_provider
 from app.agent.service import AgentService, InvalidModelOutputError, parse_decision
 from app.api.routes import agent as agent_routes
 from app.core.config import Settings
-from app.gateway import ToolGateway
+from app.gateway import SUPPORT_AGENT_ID, ToolGateway
 from app.tools.registry import UnknownToolError, default_tool_registry
 
 
@@ -91,7 +93,12 @@ async def test_failed_tool_attempt_is_persisted_and_correlated(client, monkeypat
     monkeypatch.setattr(
         agent_routes,
         "build_agent_service",
-        lambda session: AgentService(provider, ToolGateway(default_tool_registry), session),
+        lambda session, **kwargs: AgentService(
+            provider,
+            ToolGateway(default_tool_registry),
+            session,
+            SUPPORT_AGENT_ID,
+        ),
     )
 
     response = await client.post(
@@ -123,3 +130,27 @@ async def test_invalid_request_gets_generated_request_id(client) -> None:
     assert response.status_code == 422
     assert response.json()["request_id"] == response.headers["X-Request-ID"]
     assert response.json()["request_id"] != "contains spaces"
+
+
+@pytest.mark.asyncio
+async def test_support_agent_refund_is_blocked_and_audited(client, audit_store) -> None:
+    response = await client.post(
+        "/api/v1/agent/run",
+        json={"prompt": "Refund order ORD-1002 amount 25.00"},
+        headers={"X-Request-ID": "day-nine-block"},
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "TOOL_NOT_AUTHORIZED"
+
+    audit_response = await client.get("/api/v1/agent/tool-calls")
+    call = audit_response.json()[0]
+    assert call["request_id"] == "day-nine-block"
+    assert call["tool_name"] == "issue_refund"
+    assert call["status"] == "blocked"
+    assert call["result"] == {"reason": "TOOL_NOT_AUTHORIZED", "risk_score": 70}
+    assert len(audit_store.events) == 1
+    event = audit_store.events[0]
+    assert event.event_type == "tool_call_blocked"
+    assert event.message == "TOOL_NOT_AUTHORIZED"
+    assert event.tool_call_id == uuid.UUID(call["id"])

@@ -62,8 +62,23 @@ fail closed if they raise an error. Unknown tool names and invalid arguments sto
 before execution. All four tools use fictional fixtures; email, refunds, and URL
 fetching are simulations with no external side effects.
 
-FastAPI assigns or validates an `X-Request-ID` for every request. Successful and
-failed tool attempts store that ID with their arguments, result/error, status,
-and duration. `GET /api/v1/agent/tool-calls` exposes a bounded newest-first view
-for the Week 1 demo. This is observability for the deliberately insecure initial
-flow; security-gateway enforcement begins in Week 2.
+FastAPI assigns or validates an `X-Request-ID` for every request. Successful,
+failed, and blocked tool attempts store that ID with their arguments, result or
+reason, status, agent identity, and duration. `GET /api/v1/agent/tool-calls`
+exposes a bounded newest-first view.
+
+## Tool permissions (Day 9)
+
+The API currently runs the seeded `support-agent` identity through the
+`tool-permission` gateway control. Permissions are deny-by-default: the agent,
+tool, and an explicit `allowed=true` row must all exist and be active before a
+tool can execute. The seed grants customer lookup, simulated email, and fixture
+URL fetching. It explicitly denies refunds, making this demo deterministic:
+
+```text
+support-agent → issue_refund → BLOCK (TOOL_NOT_AUTHORIZED)
+```
+
+A block returns HTTP 403, records a `tool_calls` row with `status=blocked`, adds
+a linked `security_events` row, and emits a structured warning. The dispatcher
+is never reached after a blocking decision.
