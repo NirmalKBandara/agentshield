@@ -41,7 +41,8 @@ class ToolRegistry:
     def schemas(self) -> list[dict[str, Any]]:
         return [definition.public_schema() for definition in self._definitions.values()]
 
-    def execute(self, name: str, raw_arguments: dict[str, Any]) -> dict[str, Any]:
+    def _execute(self, name: str, raw_arguments: dict[str, Any]) -> dict[str, Any]:
+        """Execute after gateway authorization; application code must use ToolGateway."""
         definition = self._definitions.get(name)
         if definition is None:
             raise UnknownToolError(f"Unknown tool: {name}")

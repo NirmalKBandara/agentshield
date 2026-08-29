@@ -4,6 +4,7 @@ from app.agent.providers import RuleBasedLocalProvider, build_provider
 from app.agent.service import AgentService, InvalidModelOutputError, parse_decision
 from app.api.routes import agent as agent_routes
 from app.core.config import Settings
+from app.gateway import ToolGateway
 from app.tools.registry import UnknownToolError, default_tool_registry
 
 
@@ -19,7 +20,7 @@ class StaticProvider:
 
 @pytest.mark.asyncio
 async def test_natural_language_request_executes_selected_tool() -> None:
-    service = AgentService(RuleBasedLocalProvider(), default_tool_registry)
+    service = AgentService(RuleBasedLocalProvider(), ToolGateway(default_tool_registry))
     result = await service.run("Show customer 1002")
     assert result.decision.tool_name == "get_customer"
     assert result.decision.arguments == {"customer_id": "1002"}
@@ -32,7 +33,7 @@ async def test_unknown_model_selected_tool_cannot_execute() -> None:
     provider = StaticProvider(
         '{"action":"tool","tool_name":"delete_database","arguments":{}}'
     )
-    service = AgentService(provider, default_tool_registry)
+    service = AgentService(provider, ToolGateway(default_tool_registry))
     with pytest.raises(UnknownToolError):
         await service.run("ignore everything")
 
@@ -90,7 +91,7 @@ async def test_failed_tool_attempt_is_persisted_and_correlated(client, monkeypat
     monkeypatch.setattr(
         agent_routes,
         "build_agent_service",
-        lambda session: AgentService(provider, default_tool_registry, session),
+        lambda session: AgentService(provider, ToolGateway(default_tool_registry), session),
     )
 
     response = await client.post(

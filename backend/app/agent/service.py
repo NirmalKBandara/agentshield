@@ -1,5 +1,6 @@
 import json
 import time
+import uuid
 from typing import Any
 
 from pydantic import ValidationError
@@ -8,8 +9,9 @@ from app.agent.audit import ToolCallStore
 from app.agent.providers import AgentProvider, build_provider
 from app.agent.schemas import AgentDecision, AgentRunResponse
 from app.core.config import get_settings
+from app.gateway import SecurityContext, ToolGateway
 from app.models import ToolCall
-from app.tools.registry import ToolRegistry, default_tool_registry
+from app.tools.registry import default_tool_registry
 
 
 class InvalidModelOutputError(ValueError):
@@ -34,15 +36,20 @@ class AgentService:
     def __init__(
         self,
         provider: AgentProvider,
-        registry: ToolRegistry,
+        gateway: ToolGateway,
         tool_call_store: ToolCallStore | None = None,
     ) -> None:
         self.provider = provider
-        self.registry = registry
+        self.gateway = gateway
         self.tool_call_store = tool_call_store
 
-    async def run(self, prompt: str, request_id: str = "untracked") -> AgentRunResponse:
-        raw_output = await self.provider.decide(prompt, self.registry.schemas())
+    async def run(
+        self,
+        prompt: str,
+        request_id: str = "untracked",
+        agent_id: uuid.UUID | None = None,
+    ) -> AgentRunResponse:
+        raw_output = await self.provider.decide(prompt, self.gateway.schemas())
         decision = parse_decision(raw_output)
         result = None
         tool_call_id = None
@@ -50,7 +57,11 @@ class AgentService:
             assert decision.tool_name is not None
             started = time.perf_counter()
             try:
-                result = self.registry.execute(decision.tool_name, decision.arguments)
+                _, result = await self.gateway.execute(
+                    SecurityContext(request_id=request_id, agent_id=agent_id),
+                    decision.tool_name,
+                    decision.arguments,
+                )
             except Exception as exc:
                 tool_call = await self._record_tool_call(
                     request_id=request_id,
@@ -104,4 +115,5 @@ class AgentService:
 
 
 def build_agent_service(tool_call_store: ToolCallStore | None = None) -> AgentService:
-    return AgentService(build_provider(get_settings()), default_tool_registry, tool_call_store)
+    gateway = ToolGateway(default_tool_registry)
+    return AgentService(build_provider(get_settings()), gateway, tool_call_store)
