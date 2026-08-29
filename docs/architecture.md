@@ -44,7 +44,9 @@ Browser → Next.js /api/agent → FastAPI /api/v1/agent/run
                                       ↓
                    provider → strict JSON decision parser
                                       ↓
-                  allowlisted registry → Pydantic validation
+                   AgentShield gateway → security controls
+                                      ↓
+                  private tool dispatch → Pydantic validation
                                       ↓
               get_customer | send_email | issue_refund | fetch_url
                                       ↓
@@ -53,8 +55,11 @@ Browser → Next.js /api/agent → FastAPI /api/v1/agent/run
 
 The default provider is an offline deterministic request router. Ollama is an
 optional local provider using the same strict decision schema. A model cannot
-call a Python function directly: unknown tool names and invalid arguments stop
-before dispatch. All four tools use fictional fixtures; email, refunds, and URL
+call a Python function directly: `AgentService` receives a `ToolGateway`, and
+the registry exposes no public execution method. The gateway produces a final
+allow/block decision before its private dispatcher can run. Security controls
+fail closed if they raise an error. Unknown tool names and invalid arguments stop
+before execution. All four tools use fictional fixtures; email, refunds, and URL
 fetching are simulations with no external side effects.
 
 FastAPI assigns or validates an `X-Request-ID` for every request. Successful and
