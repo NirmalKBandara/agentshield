@@ -11,6 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.routes.agent import router as agent_router
+from app.api.routes.dashboard import router as dashboard_router
+from app.api.routes.events import router as events_router
 from app.api.routes.health import router as health_router
 from app.core.config import get_settings
 from app.core.database import dispose_engine
@@ -75,6 +77,8 @@ app.add_middleware(
 )
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(agent_router, prefix="/api/v1")
+app.include_router(dashboard_router, prefix="/api/v1")
+app.include_router(events_router)
 
 
 @app.get("/", response_model=HealthResponse, include_in_schema=False)
