@@ -7,14 +7,21 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const query = new URLSearchParams();
 
-    if (searchParams.has("severity")) {
-      query.set("severity", searchParams.get("severity")!);
-    }
-    if (searchParams.has("limit")) {
-      query.set("limit", searchParams.get("limit")!);
+    for (const name of [
+      "severity",
+      "event_type",
+      "tool",
+      "decision",
+      "min_risk_score",
+      "limit",
+      "offset",
+    ]) {
+      const value = searchParams.get(name);
+      if (value !== null) query.set(name, value);
     }
 
-    const url = `${backendUrl}/api/v1/security-events?${query.toString()}`;
+    const suffix = query.size > 0 ? `?${query.toString()}` : "";
+    const url = `${backendUrl}/api/v1/security-events${suffix}`;
     const response = await fetch(url, { cache: "no-store" });
 
     if (!response.ok) {

@@ -2142,12 +2142,12 @@ Tasks:
 
 Tasks:
 
-- [ ] Security Events API
-- [ ] Table UI
-- [ ] Detail modal/page
-- [ ] Severity badges
-- [ ] Filters
-- [ ] Reasons
+- [x] Security Events API
+- [x] Table UI
+- [x] Detail modal/page
+- [x] Severity badges
+- [x] Filters
+- [x] Reasons
 
 ---
 
