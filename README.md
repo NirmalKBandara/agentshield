@@ -1,6 +1,6 @@
 # AgentShield
 
-AgentShield is an AI-agent security gateway. The Day 9 milestone delivers a
+AgentShield is an AI-agent security gateway. The Day 16 milestone delivers a
 working Next.js playground, FastAPI backend, PostgreSQL audit storage, a
 deny-by-default security gateway, and four controlled demo tools in a Docker
 Compose stack.
@@ -19,6 +19,8 @@ Compose stack.
 - Every application tool call passes through a fail-closed gateway.
 - Seeded agent permissions allow only explicitly authorized tools.
 - Blocked calls are persisted as tool-call and security-event audit records.
+- The security-events workspace provides severity, event-type, and risk filters,
+  readable reasons, severity badges, and an accessible detail view.
 - Alembic reproduces and upgrades the seven-table database schema.
 - Unit tests, an opt-in integration test, Docker healthchecks, and CI are included.
 
@@ -135,6 +137,7 @@ for the exact commands, PR flow, and recommended branch protection.
 - [Architecture and request flow](docs/architecture.md)
 - [Database schema and migrations](docs/database.md)
 - [Git and GitHub guide](docs/git-workflow.md)
+- [Day 16 completion summary](docs/project/day-16-security-events.md)
 
 ## License
 

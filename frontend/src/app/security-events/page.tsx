@@ -2,31 +2,33 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-
-interface SecurityEvent {
-  id: string;
-  event_type: string;
-  severity: string;
-  message: string;
-  risk_score: number;
-  tool_call_id: string | null;
-  created_at: string;
-  details: Record<string, unknown>;
-}
+import {
+  buildSecurityEventsQuery,
+  eventReason,
+  SecurityEvent,
+  severityColor,
+} from "@/lib/security-events";
 
 export default function SecurityEventsPage() {
   const [events, setEvents] = useState<SecurityEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [severity, setSeverity] = useState<string | null>(null);
+  const [severity, setSeverity] = useState("");
+  const [eventType, setEventType] = useState("");
+  const [minimumRisk, setMinimumRisk] = useState(0);
   const [selectedEvent, setSelectedEvent] = useState<SecurityEvent | null>(null);
 
   useEffect(() => {
     async function loadEvents() {
+      setLoading(true);
+      setError("");
       try {
-        const url = severity
-          ? `/api/security-events?severity=${severity}`
-          : "/api/security-events";
+        const query = buildSecurityEventsQuery({
+          severity,
+          eventType,
+          minimumRisk: minimumRisk || undefined,
+        });
+        const url = `/api/security-events${query}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error("Failed to load events");
         const data = (await response.json()) as SecurityEvent[];
@@ -38,7 +40,7 @@ export default function SecurityEventsPage() {
       }
     }
     void loadEvents();
-  }, [severity]);
+  }, [severity, eventType, minimumRisk]);
 
   if (loading) {
     return (
@@ -72,14 +74,37 @@ export default function SecurityEventsPage() {
         </div>
       )}
 
-      <section style={{ marginBottom: "2rem" }}>
-        <h2>Filter by Severity</h2>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
+      <section style={{ marginBottom: "2rem" }} aria-labelledby="event-filters">
+        <h2 id="event-filters" style={{ fontSize: "2rem", marginBottom: "1rem" }}>Filters</h2>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "end" }}>
+          <label>
+            <span style={{ display: "block", marginBottom: ".35rem" }}>Event type</span>
+            <input
+              value={eventType}
+              onChange={(event) => setEventType(event.target.value)}
+              placeholder="e.g. tool_call_blocked"
+              style={{ padding: ".55rem", minWidth: "14rem" }}
+            />
+          </label>
+          <label>
+            <span style={{ display: "block", marginBottom: ".35rem" }}>Minimum risk</span>
+            <select
+              value={minimumRisk}
+              onChange={(event) => setMinimumRisk(Number(event.target.value))}
+            >
+              <option value={0}>Any score</option>
+              <option value={25}>25+</option>
+              <option value={50}>50+</option>
+              <option value={75}>75+</option>
+            </select>
+          </label>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "1rem" }}>
           <button
-            onClick={() => setSeverity(null)}
+            onClick={() => setSeverity("")}
             style={{
               padding: "0.5rem 1rem",
-              backgroundColor: !severity ? "#2196f3" : "#ddd",
+              backgroundColor: !severity ? "#087f5b" : "#ddd",
               color: !severity ? "white" : "black",
               border: "none",
               borderRadius: "0.25rem",
@@ -127,6 +152,19 @@ export default function SecurityEventsPage() {
           >
             Warning
           </button>
+          <button
+            onClick={() => setSeverity("low")}
+            style={{
+              padding: "0.5rem 1rem",
+              backgroundColor: severity === "low" ? "#087f5b" : "#ddd",
+              color: severity === "low" ? "white" : "black",
+              border: "none",
+              borderRadius: "0.25rem",
+              cursor: "pointer",
+            }}
+          >
+            Low
+          </button>
         </div>
       </section>
 
@@ -141,7 +179,7 @@ export default function SecurityEventsPage() {
                 <tr style={{ borderBottom: "2px solid #ddd" }}>
                   <th style={{ textAlign: "left", padding: "0.5rem" }}>Type</th>
                   <th style={{ textAlign: "left", padding: "0.5rem" }}>Severity</th>
-                  <th style={{ textAlign: "left", padding: "0.5rem" }}>Message</th>
+                  <th style={{ textAlign: "left", padding: "0.5rem" }}>Reason</th>
                   <th style={{ textAlign: "right", padding: "0.5rem" }}>Risk</th>
                   <th style={{ textAlign: "left", padding: "0.5rem" }}>Time</th>
                   <th style={{ textAlign: "left", padding: "0.5rem" }}>Action</th>
@@ -158,12 +196,7 @@ export default function SecurityEventsPage() {
                         style={{
                           padding: "0.25rem 0.5rem",
                           borderRadius: "0.25rem",
-                          backgroundColor:
-                            event.severity === "critical"
-                              ? "#dc3545"
-                              : event.severity === "high"
-                                ? "#ff9800"
-                                : "#ffc107",
+                          backgroundColor: severityColor(event.severity),
                           color: "white",
                           fontSize: "0.875rem",
                         }}
@@ -171,7 +204,7 @@ export default function SecurityEventsPage() {
                         {event.severity}
                       </span>
                     </td>
-                    <td style={{ padding: "0.5rem" }}>{event.message}</td>
+                    <td style={{ padding: "0.5rem" }}>{eventReason(event)}</td>
                     <td style={{ textAlign: "right", padding: "0.5rem" }}>
                       {event.risk_score.toFixed(1)}
                     </td>
@@ -203,8 +236,13 @@ export default function SecurityEventsPage() {
       </section>
 
       {selectedEvent && (
-        <section style={{ marginTop: "2rem", padding: "1rem", backgroundColor: "#f5f5f5" }}>
-          <h2>Event Details</h2>
+        <section
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="event-detail-title"
+          style={{ marginTop: "2rem", padding: "1rem", backgroundColor: "var(--panel)", border: "1px solid var(--line)" }}
+        >
+          <h2 id="event-detail-title">Event Details</h2>
           <button
             onClick={() => setSelectedEvent(null)}
             style={{
@@ -230,6 +268,9 @@ export default function SecurityEventsPage() {
             </p>
             <p>
               <strong>Message:</strong> {selectedEvent.message}
+            </p>
+            <p>
+              <strong>Reason:</strong> {eventReason(selectedEvent)}
             </p>
             <p>
               <strong>Risk Score:</strong> {selectedEvent.risk_score.toFixed(2)}
