@@ -7,6 +7,7 @@ from httpx import ASGITransport, AsyncClient
 
 from app.agent.audit import get_tool_call_store
 from app.gateway.permissions import SUPPORT_AGENT_ID, get_permission_store
+from app.gateway.policies import get_policy_rule_store, policy_rate_limiter
 from app.main import app
 from app.models import SecurityEvent, ToolCall
 
@@ -61,8 +62,17 @@ async def client(audit_store: InMemoryToolCallStore):
     async def override_permissions():
         return DemoPermissionStore()
 
+    class DemoPolicyRuleStore:
+        async def active_rules(self):
+            return {"refund_limit": 100.0, "rate_limit_per_minute": 1_000}
+
+    async def override_policy_rules():
+        return DemoPolicyRuleStore()
+
     app.dependency_overrides[get_tool_call_store] = override_store
     app.dependency_overrides[get_permission_store] = override_permissions
+    app.dependency_overrides[get_policy_rule_store] = override_policy_rules
+    policy_rate_limiter.reset()
     try:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
@@ -71,3 +81,5 @@ async def client(audit_store: InMemoryToolCallStore):
     finally:
         app.dependency_overrides.pop(get_tool_call_store, None)
         app.dependency_overrides.pop(get_permission_store, None)
+        app.dependency_overrides.pop(get_policy_rule_store, None)
+        policy_rate_limiter.reset()

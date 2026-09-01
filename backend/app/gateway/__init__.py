@@ -1,5 +1,6 @@
 from app.gateway.core import GatewayBlockedError, ToolGateway
 from app.gateway.permissions import SUPPORT_AGENT_ID, ToolPermissionControl
+from app.gateway.policies import PolicyLimitsControl
 from app.gateway.schemas import FinalDecision, SecurityContext, SecurityResult
 
 __all__ = [
@@ -9,5 +10,6 @@ __all__ = [
     "SecurityResult",
     "SUPPORT_AGENT_ID",
     "ToolPermissionControl",
+    "PolicyLimitsControl",
     "ToolGateway",
 ]

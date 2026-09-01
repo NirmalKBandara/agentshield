@@ -2168,12 +2168,12 @@ Tasks:
 
 Tasks:
 
-- [ ] List policies
-- [ ] Toggle tool permission
-- [ ] Change refund limit
-- [ ] Change rate limit
-- [ ] Validate policy input
-- [ ] Audit policy changes
+- [x] List policies
+- [x] Toggle tool permission
+- [x] Change refund limit
+- [x] Change rate limit
+- [x] Validate policy input
+- [x] Audit policy changes
 
 ---
 

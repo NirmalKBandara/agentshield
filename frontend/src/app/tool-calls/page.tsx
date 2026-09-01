@@ -57,7 +57,8 @@ export default function ToolCallsPage() {
           <Link href="/" style={{ marginRight: "1rem" }}>Home</Link>
           <Link href="/dashboard" style={{ marginRight: "1rem" }}>Dashboard</Link>
           <Link href="/playground" style={{ marginRight: "1rem" }}>Playground</Link>
-          <Link href="/security-events">Security Events</Link>
+          <Link href="/security-events" style={{ marginRight: "1rem" }}>Security Events</Link>
+          <Link href="/policies">Policies</Link>
         </nav>
       </header>
 

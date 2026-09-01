@@ -85,7 +85,8 @@ export default function DashboardPage() {
           <Link href="/security-events" style={{ marginRight: "1rem" }}>
             Security Events
           </Link>
-          <Link href="/tool-calls">Tool Calls</Link>
+          <Link href="/tool-calls" style={{ marginRight: "1rem" }}>Tool Calls</Link>
+          <Link href="/policies">Policies</Link>
         </nav>
       </header>
 

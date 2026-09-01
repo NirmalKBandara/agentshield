@@ -76,6 +76,19 @@ export default function Home() {
           >
             → Tool Calls - Audit all tool execution attempts
           </Link>
+          <Link
+            href="/policies"
+            style={{
+              padding: "1rem",
+              backgroundColor: "#e0f2f1",
+              borderRadius: "0.5rem",
+              textDecoration: "none",
+              color: "#00796b",
+              fontWeight: "bold",
+            }}
+          >
+            → Policies - Manage tool permissions and runtime limits
+          </Link>
         </nav>
       </section>
 

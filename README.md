@@ -1,6 +1,6 @@
 # AgentShield
 
-AgentShield is an AI-agent security gateway. The Day 17 milestone delivers a
+AgentShield is an AI-agent security gateway. The Day 18 milestone delivers a
 working Next.js playground, FastAPI backend, PostgreSQL audit storage, a
 deny-by-default security gateway, and four controlled demo tools in a Docker
 Compose stack.
@@ -23,7 +23,9 @@ Compose stack.
   readable reasons, severity badges, and an accessible detail view.
 - The tool-calls workspace exposes agent identity, masked arguments, gateway
   decisions, risk scores, filters, and direct investigation links for blocked calls.
-- Alembic reproduces and upgrades the seven-table database schema.
+- The policies workspace manages tool permissions, refund limits, and per-agent
+  rate limits, with validated inputs and an immutable change history.
+- Alembic reproduces and upgrades the eight-table database schema.
 - Unit tests, an opt-in integration test, Docker healthchecks, and CI are included.
 
 ## Repository layout
@@ -60,6 +62,7 @@ curl http://localhost:8000/api/v1/ready
 curl http://localhost:8000/health
 curl http://localhost:3000/api/backend-health
 curl http://localhost:8000/api/v1/agent/tool-calls
+curl http://localhost:8000/api/v1/policies
 ```
 
 Agent responses include `request_id` and `tool_call_id`. The same request ID is
@@ -141,6 +144,7 @@ for the exact commands, PR flow, and recommended branch protection.
 - [Git and GitHub guide](docs/git-workflow.md)
 - [Day 16 completion summary](docs/project/day-16-security-events.md)
 - [Day 17 completion summary](docs/project/day-17-tool-calls.md)
+- [Day 18 completion summary](docs/project/day-18-policies.md)
 
 ## License
 
