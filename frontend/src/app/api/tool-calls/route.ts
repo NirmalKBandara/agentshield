@@ -7,14 +7,17 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const query = new URLSearchParams();
 
-    if (searchParams.has("status")) {
-      query.set("status", searchParams.get("status")!);
-    }
-    if (searchParams.has("tool_name")) {
-      query.set("tool_name", searchParams.get("tool_name")!);
-    }
-    if (searchParams.has("limit")) {
-      query.set("limit", searchParams.get("limit")!);
+    for (const parameter of [
+      "status",
+      "decision",
+      "tool_name",
+      "agent",
+      "limit",
+      "offset",
+    ]) {
+      if (searchParams.has(parameter)) {
+        query.set(parameter, searchParams.get(parameter)!);
+      }
     }
 
     const url = `${backendUrl}/api/v1/tool-calls?${query.toString()}`;

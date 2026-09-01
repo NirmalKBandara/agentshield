@@ -16,6 +16,11 @@ export default function SecurityEventsPage() {
   const [severity, setSeverity] = useState("");
   const [eventType, setEventType] = useState("");
   const [minimumRisk, setMinimumRisk] = useState(0);
+  const [toolCallId, setToolCallId] = useState(() =>
+    typeof window === "undefined"
+      ? ""
+      : (new URLSearchParams(window.location.search).get("tool_call_id") ?? ""),
+  );
   const [selectedEvent, setSelectedEvent] = useState<SecurityEvent | null>(null);
 
   useEffect(() => {
@@ -27,6 +32,7 @@ export default function SecurityEventsPage() {
           severity,
           eventType,
           minimumRisk: minimumRisk || undefined,
+          toolCallId: toolCallId || undefined,
         });
         const url = `/api/security-events${query}`;
         const response = await fetch(url);
@@ -40,7 +46,7 @@ export default function SecurityEventsPage() {
       }
     }
     void loadEvents();
-  }, [severity, eventType, minimumRisk]);
+  }, [severity, eventType, minimumRisk, toolCallId]);
 
   if (loading) {
     return (
@@ -72,6 +78,13 @@ export default function SecurityEventsPage() {
         <div style={{ padding: "1rem", backgroundColor: "#ffebee", borderRadius: "0.25rem" }}>
           <p>Error: {error}</p>
         </div>
+      )}
+
+      {toolCallId && (
+        <p style={{ padding: ".75rem", border: "1px solid var(--line)", borderRadius: ".4rem" }}>
+          Showing events linked to tool call <code>{toolCallId}</code>.{" "}
+          <button type="button" onClick={() => setToolCallId("")}>Show all events</button>
+        </p>
       )}
 
       <section style={{ marginBottom: "2rem" }} aria-labelledby="event-filters">

@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
       "tool",
       "decision",
       "min_risk_score",
+      "tool_call_id",
       "limit",
       "offset",
     ]) {
