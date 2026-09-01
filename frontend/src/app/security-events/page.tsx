@@ -70,7 +70,8 @@ export default function SecurityEventsPage() {
           <Link href="/playground" style={{ marginRight: "1rem" }}>
             Playground
           </Link>
-          <Link href="/tool-calls">Tool Calls</Link>
+          <Link href="/tool-calls" style={{ marginRight: "1rem" }}>Tool Calls</Link>
+          <Link href="/policies">Policies</Link>
         </nav>
       </header>
 

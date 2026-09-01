@@ -142,3 +142,21 @@ class Policy(TimestampMixin, Base):
     rules: Mapped[dict] = mapped_column(JSON)
     priority: Mapped[int] = mapped_column(Integer, default=100)
     is_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class PolicyAuditLog(Base):
+    """Immutable record of an administrative policy change."""
+
+    __tablename__ = "policy_audit_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    request_id: Mapped[str] = mapped_column(String(128), index=True)
+    actor: Mapped[str] = mapped_column(String(120), default="dashboard-user")
+    action: Mapped[str] = mapped_column(String(80), index=True)
+    resource_type: Mapped[str] = mapped_column(String(40))
+    resource_id: Mapped[uuid.UUID] = mapped_column(Uuid, index=True)
+    before: Mapped[dict] = mapped_column(JSON)
+    after: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, index=True
+    )

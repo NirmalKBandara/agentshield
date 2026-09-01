@@ -3,6 +3,8 @@
 AgentShield uses PostgreSQL, SQLAlchemy 2's async API, and Alembic. The initial
 migration creates `users`, `agents`, `tools`, `agent_permissions`, `tool_calls`,
 `security_events`, and `policies`, including foreign keys and lookup indexes.
+The Day 18 migration adds `policy_audit_logs` and seeds the default refund and
+per-minute request limits.
 
 ## Apply or inspect the schema
 
@@ -28,6 +30,10 @@ The Day 9 data migration seeds a deterministic `support-agent`, the four demo
 tool records, and least-privilege rows in the existing `agent_permissions`
 table. Only `issue_refund` is explicitly denied; a missing permission is denied
 by the runtime control as well.
+
+Day 18 makes those permission rows editable through the policy API. Every
+successful change creates an immutable `policy_audit_logs` row containing the
+request ID, actor, action, resource, and before/after values.
 
 ## Connection configuration
 

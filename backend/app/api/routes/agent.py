@@ -7,14 +7,22 @@ from app.agent.audit import ToolCallStore, get_tool_call_store
 from app.agent.providers import ProviderError
 from app.agent.schemas import AgentRunRequest, AgentRunResponse, ToolCallResponse
 from app.agent.service import InvalidModelOutputError, ToolExecutionError, build_agent_service
-from app.gateway import SUPPORT_AGENT_ID, GatewayBlockedError, ToolGateway, ToolPermissionControl
+from app.gateway import (
+    SUPPORT_AGENT_ID,
+    GatewayBlockedError,
+    PolicyLimitsControl,
+    ToolGateway,
+    ToolPermissionControl,
+)
 from app.gateway.permissions import PermissionStore, get_permission_store
+from app.gateway.policies import PolicyRuleStore, get_policy_rule_store
 from app.models import ToolCall
 from app.tools.registry import UnknownToolError, default_tool_registry
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 ToolCallStoreDependency = Annotated[ToolCallStore, Depends(get_tool_call_store)]
 PermissionStoreDependency = Annotated[PermissionStore, Depends(get_permission_store)]
+PolicyRuleStoreDependency = Annotated[PolicyRuleStore, Depends(get_policy_rule_store)]
 
 
 @router.post("/run", response_model=AgentRunResponse)
@@ -23,10 +31,14 @@ async def run_agent(
     request: Request,
     tool_call_store: ToolCallStoreDependency,
     permission_store: PermissionStoreDependency,
+    policy_rule_store: PolicyRuleStoreDependency,
 ) -> AgentRunResponse:
     request_id = request.state.request_id
     try:
-        gateway = ToolGateway(default_tool_registry, [ToolPermissionControl(permission_store)])
+        gateway = ToolGateway(
+            default_tool_registry,
+            [ToolPermissionControl(permission_store), PolicyLimitsControl(policy_rule_store)],
+        )
         return await build_agent_service(
             tool_call_store, gateway=gateway, agent_id=SUPPORT_AGENT_ID
         ).run(payload.prompt, request_id)

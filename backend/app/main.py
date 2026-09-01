@@ -14,6 +14,7 @@ from app.api.routes.agent import router as agent_router
 from app.api.routes.dashboard import router as dashboard_router
 from app.api.routes.events import router as events_router
 from app.api.routes.health import router as health_router
+from app.api.routes.policies import router as policies_router
 from app.core.config import get_settings
 from app.core.database import dispose_engine
 from app.schemas.health import HealthResponse
@@ -72,13 +73,14 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
     allow_credentials=False,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PATCH"],
     allow_headers=["*"],
 )
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(agent_router, prefix="/api/v1")
 app.include_router(dashboard_router, prefix="/api/v1")
 app.include_router(events_router)
+app.include_router(policies_router, prefix="/api/v1")
 
 
 @app.get("/", response_model=HealthResponse, include_in_schema=False)

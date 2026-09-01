@@ -1,7 +1,18 @@
+import uuid
+
 from sqlalchemy import create_engine, event, select
 from sqlalchemy.orm import Session
 
-from app.models import Agent, AgentPermission, Policy, SecurityEvent, Tool, ToolCall, User
+from app.models import (
+    Agent,
+    AgentPermission,
+    Policy,
+    PolicyAuditLog,
+    SecurityEvent,
+    Tool,
+    ToolCall,
+    User,
+)
 from app.models.base import Base
 
 
@@ -21,8 +32,18 @@ def test_schema_supports_basic_create_and_read() -> None:
             arguments={"customer_id": "1002"},
         )
         event = SecurityEvent(tool_call=call, event_type="demo", severity="low", message="test")
-        policy = Policy(name="Demo policy", rules={"allow": ["get_customer"]})
-        session.add_all([user, agent, tool, permission, call, event, policy])
+        policy_id = uuid.uuid4()
+        policy = Policy(id=policy_id, name="Demo policy", rules={"allow": ["get_customer"]})
+        policy_audit = PolicyAuditLog(
+            request_id="test-request",
+            actor="test-user",
+            action="policy_created",
+            resource_type="policy",
+            resource_id=policy_id,
+            before={},
+            after={"allow": ["get_customer"]},
+        )
+        session.add_all([user, agent, tool, permission, call, event, policy, policy_audit])
         session.commit()
 
         stored = session.scalar(select(User).where(User.email == "owner@example.test"))
@@ -30,6 +51,7 @@ def test_schema_supports_basic_create_and_read() -> None:
         assert stored.display_name == "Demo Owner"
         assert session.scalar(select(ToolCall).where(ToolCall.tool_name == "get_customer"))
         assert session.scalar(select(SecurityEvent).where(SecurityEvent.severity == "low"))
+        assert session.scalar(select(PolicyAuditLog).where(PolicyAuditLog.actor == "test-user"))
 
     engine.dispose()
 
