@@ -2155,12 +2155,12 @@ Tasks:
 
 Tasks:
 
-- [ ] Tool Call API
-- [ ] Table
-- [ ] Arguments display
-- [ ] Decision
-- [ ] Risk score
-- [ ] Agent filter
+- [x] Tool Call API
+- [x] Table
+- [x] Arguments display
+- [x] Decision
+- [x] Risk score
+- [x] Agent filter
 
 ---
 

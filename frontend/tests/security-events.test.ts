@@ -25,8 +25,11 @@ describe("security event presentation", () => {
         severity: "high",
         eventType: "prompt injection",
         minimumRisk: 50,
+        toolCallId: "call-123",
       }),
-    ).toBe("?severity=high&event_type=prompt+injection&min_risk_score=50");
+    ).toBe(
+      "?severity=high&event_type=prompt+injection&min_risk_score=50&tool_call_id=call-123",
+    );
   });
 
   it("uses a structured reason and falls back to the message", () => {

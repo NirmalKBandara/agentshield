@@ -14,6 +14,7 @@ export interface SecurityEventFilters {
   severity?: string;
   eventType?: string;
   minimumRisk?: number;
+  toolCallId?: string;
 }
 
 export function buildSecurityEventsQuery(filters: SecurityEventFilters): string {
@@ -24,6 +25,7 @@ export function buildSecurityEventsQuery(filters: SecurityEventFilters): string 
   if (filters.minimumRisk !== undefined) {
     query.set("min_risk_score", filters.minimumRisk.toString());
   }
+  if (filters.toolCallId) query.set("tool_call_id", filters.toolCallId);
 
   const value = query.toString();
   return value ? `?${value}` : "";
