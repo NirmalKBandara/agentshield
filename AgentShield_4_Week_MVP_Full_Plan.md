@@ -2181,13 +2181,13 @@ Tasks:
 
 Tasks:
 
-- [ ] Create scenarios
-- [ ] Add Run Attack button
-- [ ] Show payload
-- [ ] Show triggered controls
-- [ ] Show score
-- [ ] Show decision
-- [ ] Store test run
+- [x] Create scenarios
+- [x] Add Run Attack button
+- [x] Show payload
+- [x] Show triggered controls
+- [x] Show score
+- [x] Show decision
+- [x] Store test run
 
 ---
 

@@ -89,6 +89,19 @@ export default function Home() {
           >
             → Policies - Manage tool permissions and runtime limits
           </Link>
+          <Link
+            href="/red-team"
+            style={{
+              padding: "1rem",
+              backgroundColor: "#ffebee",
+              borderRadius: "0.5rem",
+              textDecoration: "none",
+              color: "#b4233c",
+              fontWeight: "bold",
+            }}
+          >
+            → Red Team Lab - Reproduce six safe attack simulations
+          </Link>
         </nav>
       </section>
 

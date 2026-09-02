@@ -15,6 +15,7 @@ from app.api.routes.dashboard import router as dashboard_router
 from app.api.routes.events import router as events_router
 from app.api.routes.health import router as health_router
 from app.api.routes.policies import router as policies_router
+from app.api.routes.red_team import router as red_team_router
 from app.core.config import get_settings
 from app.core.database import dispose_engine
 from app.schemas.health import HealthResponse
@@ -81,6 +82,7 @@ app.include_router(agent_router, prefix="/api/v1")
 app.include_router(dashboard_router, prefix="/api/v1")
 app.include_router(events_router)
 app.include_router(policies_router, prefix="/api/v1")
+app.include_router(red_team_router, prefix="/api/v1")
 
 
 @app.get("/", response_model=HealthResponse, include_in_schema=False)

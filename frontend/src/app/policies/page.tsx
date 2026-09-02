@@ -135,7 +135,8 @@ export default function PoliciesPage() {
           <Link href="/dashboard" style={{ marginRight: "1rem" }}>Dashboard</Link>
           <Link href="/playground" style={{ marginRight: "1rem" }}>Playground</Link>
           <Link href="/security-events" style={{ marginRight: "1rem" }}>Security Events</Link>
-          <Link href="/tool-calls">Tool Calls</Link>
+          <Link href="/tool-calls" style={{ marginRight: "1rem" }}>Tool Calls</Link>
+          <Link href="/red-team">Red Team Lab</Link>
         </nav>
       </header>
 

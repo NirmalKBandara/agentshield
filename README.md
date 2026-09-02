@@ -1,6 +1,6 @@
 # AgentShield
 
-AgentShield is an AI-agent security gateway. The Day 18 milestone delivers a
+AgentShield is an AI-agent security gateway. The Day 19 milestone delivers a
 working Next.js playground, FastAPI backend, PostgreSQL audit storage, a
 deny-by-default security gateway, and four controlled demo tools in a Docker
 Compose stack.
@@ -25,6 +25,8 @@ Compose stack.
   decisions, risk scores, filters, and direct investigation links for blocked calls.
 - The policies workspace manages tool permissions, refund limits, and per-agent
   rate limits, with validated inputs and an immutable change history.
+- The Red Team Lab safely reproduces six deterministic attacks, explains the
+  triggered controls and risk score, and records every run as a security event.
 - Alembic reproduces and upgrades the eight-table database schema.
 - Unit tests, an opt-in integration test, Docker healthchecks, and CI are included.
 
@@ -63,6 +65,7 @@ curl http://localhost:8000/health
 curl http://localhost:3000/api/backend-health
 curl http://localhost:8000/api/v1/agent/tool-calls
 curl http://localhost:8000/api/v1/policies
+curl http://localhost:8000/api/v1/red-team/scenarios
 ```
 
 Agent responses include `request_id` and `tool_call_id`. The same request ID is
@@ -145,6 +148,7 @@ for the exact commands, PR flow, and recommended branch protection.
 - [Day 16 completion summary](docs/project/day-16-security-events.md)
 - [Day 17 completion summary](docs/project/day-17-tool-calls.md)
 - [Day 18 completion summary](docs/project/day-18-policies.md)
+- [Day 19 completion summary](docs/project/day-19-red-team-lab.md)
 
 ## License
 

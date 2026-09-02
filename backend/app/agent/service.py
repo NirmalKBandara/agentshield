@@ -63,7 +63,9 @@ class AgentService:
             started = time.perf_counter()
             try:
                 _, result = await self.gateway.execute(
-                    SecurityContext(request_id=request_id, agent_id=self.agent_id),
+                    SecurityContext(
+                        request_id=request_id, agent_id=self.agent_id, user_prompt=prompt
+                    ),
                     decision.tool_name,
                     decision.arguments,
                 )

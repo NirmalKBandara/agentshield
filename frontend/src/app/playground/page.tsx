@@ -71,7 +71,8 @@ export default function Playground() {
             Security Events
           </Link>
           <Link href="/tool-calls" style={{ marginRight: "1rem" }}>Tool Calls</Link>
-          <Link href="/policies">Policies</Link>
+          <Link href="/policies" style={{ marginRight: "1rem" }}>Policies</Link>
+          <Link href="/red-team">Red Team Lab</Link>
         </nav>
       </header>
 
