@@ -10,7 +10,10 @@ from app.agent.service import InvalidModelOutputError, ToolExecutionError, build
 from app.gateway import (
     SUPPORT_AGENT_ID,
     GatewayBlockedError,
+    NetworkDestinationControl,
     PolicyLimitsControl,
+    PromptInjectionControl,
+    SensitiveDataControl,
     ToolGateway,
     ToolPermissionControl,
 )
@@ -37,7 +40,13 @@ async def run_agent(
     try:
         gateway = ToolGateway(
             default_tool_registry,
-            [ToolPermissionControl(permission_store), PolicyLimitsControl(policy_rule_store)],
+            [
+                PromptInjectionControl(),
+                SensitiveDataControl(),
+                NetworkDestinationControl(),
+                ToolPermissionControl(permission_store),
+                PolicyLimitsControl(policy_rule_store),
+            ],
         )
         return await build_agent_service(
             tool_call_store, gateway=gateway, agent_id=SUPPORT_AGENT_ID

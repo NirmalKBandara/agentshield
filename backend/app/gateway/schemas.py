@@ -11,6 +11,7 @@ class SecurityContext(BaseModel):
 
     request_id: str = Field(min_length=1, max_length=128)
     agent_id: uuid.UUID | None = None
+    user_prompt: str = Field(default="", max_length=4000)
 
 
 class SecurityResult(BaseModel):
