@@ -2195,12 +2195,12 @@ Tasks:
 
 Tasks:
 
-- [ ] Review false positives
-- [ ] Review false negatives
-- [ ] Normalize score
-- [ ] Add reason codes
-- [ ] Improve explanations
-- [ ] Add tests
+- [x] Review false positives
+- [x] Review false negatives
+- [x] Normalize score
+- [x] Add reason codes
+- [x] Improve explanations
+- [x] Add tests
 
 ---
 

@@ -10,7 +10,7 @@ from app.agent.audit import ToolCallStore
 from app.agent.providers import AgentProvider, build_provider
 from app.agent.schemas import AgentDecision, AgentRunResponse
 from app.core.config import get_settings
-from app.gateway import GatewayBlockedError, SecurityContext, ToolGateway
+from app.gateway import GatewayBlockedError, RiskThresholds, SecurityContext, ToolGateway
 from app.models import ToolCall
 from app.tools.registry import default_tool_registry
 
@@ -70,14 +70,18 @@ class AgentService:
                     decision.arguments,
                 )
             except GatewayBlockedError as exc:
-                risk_score = max(
-                    (result.risk_score for result in exc.decision.results), default=100
-                )
+                risk_score = exc.decision.risk_score
                 tool_call = await self._record_tool_call(
                     request_id=request_id,
                     tool_name=decision.tool_name,
                     arguments=decision.arguments,
-                    result={"reason": exc.decision.reason, "risk_score": risk_score},
+                    result={
+                        "reason": exc.decision.reason,
+                        "reason_codes": list(exc.decision.reason_codes),
+                        "explanation": exc.decision.explanation,
+                        "risk_score": risk_score,
+                        "risk_level": exc.decision.risk_level,
+                    },
                     status="blocked",
                     started=started,
                 )
@@ -89,6 +93,9 @@ class AgentService:
                         tool_name=decision.tool_name,
                         reason=exc.decision.reason,
                         risk_score=risk_score,
+                        risk_level=exc.decision.risk_level,
+                        reason_codes=exc.decision.reason_codes,
+                        explanation=exc.decision.explanation,
                     )
                 logger.warning(
                     "Blocked tool call",
@@ -99,6 +106,8 @@ class AgentService:
                         "tool": decision.tool_name,
                         "reason": exc.decision.reason,
                         "risk_score": risk_score,
+                        "risk_level": exc.decision.risk_level,
+                        "reason_codes": list(exc.decision.reason_codes),
                     },
                 )
                 raise
@@ -163,7 +172,11 @@ def build_agent_service(
 ) -> AgentService:
     return AgentService(
         build_provider(get_settings()),
-        gateway or ToolGateway(default_tool_registry),
+        gateway
+        or ToolGateway(
+            default_tool_registry,
+            thresholds=RiskThresholds(*get_settings().risk_threshold_values),
+        ),
         tool_call_store,
         agent_id,
     )

@@ -158,7 +158,7 @@ async def test_list_security_events_exposes_inspection_fields(
             "event_type": "tool_call_blocked",
             "threat_category": "tool_call_blocked",
             "severity": "high",
-            "risk_level": "high",
+            "risk_level": "critical",
             "message": "Refund exceeds policy limit",
             "reason": "Policy limit is 100",
             "risk_score": 87.5,

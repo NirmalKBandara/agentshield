@@ -1,6 +1,6 @@
 # AgentShield
 
-AgentShield is an AI-agent security gateway. The Day 19 milestone delivers a
+AgentShield is an AI-agent security gateway. The Day 20 milestone delivers a
 working Next.js playground, FastAPI backend, PostgreSQL audit storage, a
 deny-by-default security gateway, and four controlled demo tools in a Docker
 Compose stack.
@@ -27,6 +27,9 @@ Compose stack.
   rate limits, with validated inputs and an immutable change history.
 - The Red Team Lab safely reproduces six deterministic attacks, explains the
   triggered controls and risk score, and records every run as a security event.
+- The risk engine combines independent signals into a deterministic 0–100 score,
+  exposes stable reason codes and readable explanations, and maps configurable
+  thresholds to low, medium, high, and critical levels.
 - Alembic reproduces and upgrades the eight-table database schema.
 - Unit tests, an opt-in integration test, Docker healthchecks, and CI are included.
 
@@ -132,6 +135,9 @@ Copy templates before local use. Real `.env` files are ignored by Git.
 | `MODEL_PROVIDER` | FastAPI | `rules` (offline default) or optional local `ollama` |
 | `OLLAMA_BASE_URL` | FastAPI | Local Ollama API URL when selected |
 | `OLLAMA_MODEL` | FastAPI | Locally installed Ollama model name |
+| `RISK_MEDIUM_THRESHOLD` | FastAPI | First medium-risk score; default `30` |
+| `RISK_HIGH_THRESHOLD` | FastAPI | First high-risk score; default `60` |
+| `RISK_CRITICAL_THRESHOLD` | FastAPI | First critical-risk score; default `80` |
 
 ## Git and GitHub workflow
 
@@ -149,6 +155,7 @@ for the exact commands, PR flow, and recommended branch protection.
 - [Day 17 completion summary](docs/project/day-17-tool-calls.md)
 - [Day 18 completion summary](docs/project/day-18-policies.md)
 - [Day 19 completion summary](docs/project/day-19-red-team-lab.md)
+- [Day 20 completion summary](docs/project/day-20-risk-engine.md)
 
 ## License
 

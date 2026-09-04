@@ -29,7 +29,8 @@ async def test_refund_above_configured_limit_is_blocked() -> None:
 
     assert result.outcome == "block"
     assert result.reason == "REFUND_LIMIT_EXCEEDED"
-    assert result.risk_score == 80
+    assert result.risk_score == 40
+    assert "configured policy limit" in result.explanation
 
 
 @pytest.mark.asyncio

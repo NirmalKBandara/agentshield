@@ -7,12 +7,14 @@ from app.agent.audit import ToolCallStore, get_tool_call_store
 from app.agent.providers import ProviderError
 from app.agent.schemas import AgentRunRequest, AgentRunResponse, ToolCallResponse
 from app.agent.service import InvalidModelOutputError, ToolExecutionError, build_agent_service
+from app.core.config import get_settings
 from app.gateway import (
     SUPPORT_AGENT_ID,
     GatewayBlockedError,
     NetworkDestinationControl,
     PolicyLimitsControl,
     PromptInjectionControl,
+    RiskThresholds,
     SensitiveDataControl,
     ToolGateway,
     ToolPermissionControl,
@@ -47,6 +49,7 @@ async def run_agent(
                 ToolPermissionControl(permission_store),
                 PolicyLimitsControl(policy_rule_store),
             ],
+            thresholds=RiskThresholds(*get_settings().risk_threshold_values),
         )
         return await build_agent_service(
             tool_call_store, gateway=gateway, agent_id=SUPPORT_AGENT_ID

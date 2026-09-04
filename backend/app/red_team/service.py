@@ -1,12 +1,14 @@
 from dataclasses import dataclass
 from typing import Any
 
+from app.core.config import get_settings
 from app.gateway import (
     SUPPORT_AGENT_ID,
     FinalDecision,
     NetworkDestinationControl,
     PolicyLimitsControl,
     PromptInjectionControl,
+    RiskThresholds,
     SecurityContext,
     SensitiveDataControl,
     ToolGateway,
@@ -33,7 +35,11 @@ class RedTeamExecution:
 
     @property
     def score(self) -> int:
-        return max((result.risk_score for result in self.decision.results), default=0)
+        return self.decision.risk_score
+
+    @property
+    def risk_level(self) -> str:
+        return self.decision.risk_level
 
     @property
     def triggered_controls(self) -> list[str]:
@@ -144,6 +150,7 @@ async def run_scenario(scenario: RedTeamScenario, request_id: str) -> RedTeamExe
             ToolPermissionControl(LabPermissionStore(scenario.id != "unauthorized-tool")),
             PolicyLimitsControl(LabPolicyStore(), FixedWindowRateLimiter()),
         ],
+        thresholds=RiskThresholds(*get_settings().risk_threshold_values),
     )
     action = scenario.requested_action
     context = SecurityContext(

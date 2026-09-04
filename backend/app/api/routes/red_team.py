@@ -35,7 +35,10 @@ class RunResponse(BaseModel):
     requested_action: dict[str, Any]
     triggered_controls: list[str]
     reason: str
+    reason_codes: list[str]
+    explanation: str
     score: int
+    risk_level: str
     decision: Literal["block"]
     created_at: datetime
 
@@ -69,8 +72,8 @@ async def run_attack(
     result = await run_scenario(scenario, request.state.request_id)
     event = SecurityEvent(
         event_type="red_team_attack_blocked",
-        severity="critical" if result.score >= 90 else "high",
-        message=result.decision.reason,
+        severity=result.risk_level,
+        message=result.decision.explanation,
         details={
             "request_id": request.state.request_id,
             "scenario_id": scenario.id,
@@ -79,6 +82,10 @@ async def run_attack(
             "requested_action": scenario.requested_action,
             "triggered_controls": result.triggered_controls,
             "decision": result.decision.outcome.upper(),
+            "reason": result.decision.reason,
+            "reason_codes": list(result.decision.reason_codes),
+            "explanation": result.decision.explanation,
+            "risk_level": result.risk_level,
         },
         risk_score=result.score,
     )
@@ -93,7 +100,10 @@ async def run_attack(
         requested_action=scenario.requested_action,
         triggered_controls=result.triggered_controls,
         reason=result.decision.reason,
+        reason_codes=list(result.decision.reason_codes),
+        explanation=result.decision.explanation,
         score=result.score,
+        risk_level=result.risk_level,
         decision=result.decision.outcome,
         created_at=event.created_at,
     )

@@ -33,6 +33,9 @@ class ToolCallStore(Protocol):
         tool_name: str,
         reason: str,
         risk_score: int,
+        risk_level: str,
+        reason_codes: tuple[str, ...],
+        explanation: str,
     ) -> SecurityEvent: ...
 
     async def list_recent(self, limit: int) -> Sequence[ToolCall]: ...
@@ -76,17 +79,23 @@ class SqlAlchemyToolCallStore:
         tool_name: str,
         reason: str,
         risk_score: int,
+        risk_level: str,
+        reason_codes: tuple[str, ...],
+        explanation: str,
     ) -> SecurityEvent:
         event = SecurityEvent(
             tool_call_id=tool_call_id,
             event_type="tool_call_blocked",
-            severity="warning",
-            message=reason,
+            severity=risk_level,
+            message=explanation,
             details={
                 "request_id": request_id,
                 "agent_id": str(agent_id) if agent_id else None,
                 "tool": tool_name,
                 "reason": reason,
+                "reason_codes": list(reason_codes),
+                "explanation": explanation,
+                "risk_level": risk_level,
             },
             risk_score=Decimal(risk_score),
         )

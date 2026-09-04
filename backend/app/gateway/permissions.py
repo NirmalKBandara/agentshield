@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
+from app.gateway.risk import ReasonCode, result_for
 from app.gateway.schemas import SecurityContext, SecurityResult
 from app.models import Agent, AgentPermission, Tool
 
@@ -50,16 +51,15 @@ class ToolPermissionControl:
         if context.agent_id is not None and await self.store.is_allowed(
             context.agent_id, tool_name
         ):
-            return SecurityResult(
+            return result_for(
                 control=self.name,
                 outcome="allow",
                 reason="TOOL_AUTHORIZED",
             )
-        return SecurityResult(
+        return result_for(
             control=self.name,
             outcome="block",
-            reason="TOOL_NOT_AUTHORIZED",
-            risk_score=70,
+            reason=ReasonCode.TOOL_NOT_AUTHORIZED,
         )
 
 

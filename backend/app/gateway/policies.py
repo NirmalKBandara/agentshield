@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
+from app.gateway.risk import ReasonCode, result_for
 from app.gateway.schemas import SecurityContext, SecurityResult
 from app.models import Policy
 
@@ -84,25 +85,23 @@ class PolicyLimitsControl:
             except (InvalidOperation, TypeError, ValueError):
                 amount = refund_limit = Decimal("0")
             if amount > refund_limit:
-                return SecurityResult(
+                return result_for(
                     control=self.name,
                     outcome="block",
-                    reason="REFUND_LIMIT_EXCEEDED",
-                    risk_score=80,
+                    reason=ReasonCode.REFUND_LIMIT_EXCEEDED,
                 )
 
         configured_rate = rules.get("rate_limit_per_minute")
         if isinstance(configured_rate, int) and configured_rate > 0:
             identity = str(context.agent_id) if context.agent_id else "anonymous"
             if not await self.rate_limiter.consume(identity, configured_rate):
-                return SecurityResult(
+                return result_for(
                     control=self.name,
                     outcome="block",
-                    reason="RATE_LIMIT_EXCEEDED",
-                    risk_score=65,
+                    reason=ReasonCode.RATE_LIMIT_EXCEEDED,
                 )
 
-        return SecurityResult(
+        return result_for(
             control=self.name,
             outcome="allow",
             reason="POLICY_LIMITS_SATISFIED",

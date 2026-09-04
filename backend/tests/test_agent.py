@@ -6,8 +6,8 @@ from app.agent.providers import RuleBasedLocalProvider, build_provider
 from app.agent.service import AgentService, InvalidModelOutputError, parse_decision
 from app.api.routes import agent as agent_routes
 from app.core.config import Settings
-from app.gateway import SUPPORT_AGENT_ID, ToolGateway
-from app.tools.registry import UnknownToolError, default_tool_registry
+from app.gateway import SUPPORT_AGENT_ID, GatewayBlockedError, ToolGateway
+from app.tools.registry import default_tool_registry
 
 
 class StaticProvider:
@@ -36,8 +36,10 @@ async def test_unknown_model_selected_tool_cannot_execute() -> None:
         '{"action":"tool","tool_name":"delete_database","arguments":{}}'
     )
     service = AgentService(provider, ToolGateway(default_tool_registry))
-    with pytest.raises(UnknownToolError):
+    with pytest.raises(GatewayBlockedError) as blocked:
         await service.run("ignore everything")
+    assert blocked.value.decision.reason == "UNKNOWN_TOOL"
+    assert blocked.value.decision.risk_score == 50
 
 
 @pytest.mark.parametrize(
@@ -148,9 +150,16 @@ async def test_support_agent_refund_is_blocked_and_audited(client, audit_store) 
     assert call["request_id"] == "day-nine-block"
     assert call["tool_name"] == "issue_refund"
     assert call["status"] == "blocked"
-    assert call["result"] == {"reason": "TOOL_NOT_AUTHORIZED", "risk_score": 70}
+    assert call["result"] == {
+        "reason": "TOOL_NOT_AUTHORIZED",
+        "reason_codes": ["TOOL_NOT_AUTHORIZED"],
+        "explanation": "The agent is not authorized to use the requested tool.",
+        "risk_score": 50,
+        "risk_level": "medium",
+    }
     assert len(audit_store.events) == 1
     event = audit_store.events[0]
     assert event.event_type == "tool_call_blocked"
-    assert event.message == "TOOL_NOT_AUTHORIZED"
+    assert event.message == "The agent is not authorized to use the requested tool."
+    assert event.severity == "medium"
     assert event.tool_call_id == uuid.UUID(call["id"])

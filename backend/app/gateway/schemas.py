@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+RiskLevel = Literal["low", "medium", "high", "critical"]
+
 
 class SecurityContext(BaseModel):
     """Trusted request identity and correlation data supplied to every control."""
@@ -22,6 +24,7 @@ class SecurityResult(BaseModel):
     control: str = Field(min_length=1, max_length=80)
     outcome: Literal["allow", "block"]
     reason: str = Field(min_length=1, max_length=500)
+    explanation: str = Field(default="Security control completed.", min_length=1, max_length=1000)
     risk_score: int = Field(default=0, ge=0, le=100)
 
 
@@ -33,6 +36,10 @@ class FinalDecision(BaseModel):
     outcome: Literal["allow", "block"]
     reason: str = Field(min_length=1, max_length=500)
     results: tuple[SecurityResult, ...] = ()
+    risk_score: int = Field(default=0, ge=0, le=100)
+    risk_level: RiskLevel = "low"
+    reason_codes: tuple[str, ...] = ()
+    explanation: str = Field(default="No blocking security signals were detected.")
 
     @property
     def allowed(self) -> bool:

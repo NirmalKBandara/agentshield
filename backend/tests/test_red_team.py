@@ -73,7 +73,10 @@ async def test_runs_and_stores_attack_result(red_team_client) -> None:
     result = response.json()
     assert result["scenario_id"] == "ssrf"
     assert result["decision"] == "block"
-    assert result["score"] == 100
+    assert result["score"] == 60
+    assert result["risk_level"] == "high"
+    assert result["reason_codes"] == ["UNSAFE_NETWORK_DESTINATION"]
+    assert "private, loopback" in result["explanation"]
     assert result["triggered_controls"] == ["network-destination-policy"]
     assert result["request_id"] == "red-team-run-1"
     assert session.commits == 1
@@ -93,6 +96,8 @@ async def test_each_scenario_returns_a_block_with_controls(red_team_client) -> N
         assert result["decision"] == "block"
         assert result["triggered_controls"]
         assert 1 <= result["score"] <= 100
+        assert result["risk_level"] in {"low", "medium", "high", "critical"}
+        assert result["reason_codes"]
 
 
 async def test_unknown_scenario_is_not_stored(red_team_client) -> None:
