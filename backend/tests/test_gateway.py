@@ -72,4 +72,22 @@ async def test_gateway_fails_closed_when_control_errors() -> None:
         )
 
     assert blocked.value.decision.results[0].risk_score == 100
-    assert "failed closed" in blocked.value.decision.reason
+    assert blocked.value.decision.reason == "SECURITY_CONTROL_FAILURE"
+    assert "failed" in blocked.value.decision.explanation
+    assert blocked.value.decision.risk_level == "critical"
+
+
+@pytest.mark.asyncio
+async def test_unknown_tool_is_blocked_before_execution() -> None:
+    gateway = ToolGateway(default_tool_registry)
+
+    with pytest.raises(GatewayBlockedError) as blocked:
+        await gateway.execute(
+            SecurityContext(request_id="unknown-tool"),
+            "delete_database",
+            {},
+        )
+
+    assert blocked.value.decision.reason_codes == ("UNKNOWN_TOOL",)
+    assert blocked.value.decision.risk_score == 50
+    assert blocked.value.decision.risk_level == "medium"

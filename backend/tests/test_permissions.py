@@ -62,4 +62,5 @@ async def test_explicit_deny_and_missing_identity_or_permission_block(
         )
 
     assert blocked.value.decision.reason == "TOOL_NOT_AUTHORIZED"
-    assert blocked.value.decision.results[0].risk_score == 70
+    assert blocked.value.decision.results[0].risk_score == 50
+    assert blocked.value.decision.risk_level == "medium"

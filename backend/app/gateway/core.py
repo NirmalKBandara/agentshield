@@ -2,6 +2,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from app.gateway.controls import SecurityControl
+from app.gateway.risk import DEFAULT_THRESHOLDS, ReasonCode, RiskThresholds, assess_risk, result_for
 from app.gateway.schemas import FinalDecision, SecurityContext, SecurityResult
 from app.tools.registry import ToolRegistry
 
@@ -19,9 +20,11 @@ class ToolGateway:
         self,
         registry: ToolRegistry,
         controls: Sequence[SecurityControl] = (),
+        thresholds: RiskThresholds = DEFAULT_THRESHOLDS,
     ) -> None:
         self._registry = registry
         self._controls = tuple(controls)
+        self._thresholds = thresholds
 
     def schemas(self) -> list[dict[str, Any]]:
         return self._registry.schemas()
@@ -33,25 +36,48 @@ class ToolGateway:
         arguments: dict[str, Any],
     ) -> FinalDecision:
         results: list[SecurityResult] = []
+        if not self._registry.contains(tool_name):
+            results.append(
+                result_for(
+                    control="tool-registry",
+                    outcome="block",
+                    reason=ReasonCode.UNKNOWN_TOOL,
+                )
+            )
         for control in self._controls:
             try:
                 result = await control.evaluate(context, tool_name, arguments)
             except Exception:
-                result = SecurityResult(
+                result = result_for(
                     control=control.name,
                     outcome="block",
-                    reason=f"Security control {control.name} failed closed",
-                    risk_score=100,
+                    reason=ReasonCode.SECURITY_CONTROL_FAILURE,
+                    explanation=(
+                        f"Security control {control.name} failed, so the gateway denied the "
+                        "request safely."
+                    ),
                 )
             results.append(result)
 
-        blocked = next((result for result in results if result.outcome == "block"), None)
-        if blocked is not None:
-            return FinalDecision(outcome="block", reason=blocked.reason, results=tuple(results))
+        assessment = assess_risk(results, self._thresholds)
+        if assessment.reason_codes:
+            return FinalDecision(
+                outcome="block",
+                reason=assessment.reason_codes[0],
+                results=tuple(results),
+                risk_score=assessment.score,
+                risk_level=assessment.level,
+                reason_codes=assessment.reason_codes,
+                explanation=assessment.explanation,
+            )
         return FinalDecision(
             outcome="allow",
             reason="All configured security controls allowed the tool call",
             results=tuple(results),
+            risk_score=assessment.score,
+            risk_level=assessment.level,
+            reason_codes=assessment.reason_codes,
+            explanation=assessment.explanation,
         )
 
     async def execute(

@@ -3,8 +3,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from app.gateway import SecurityContext, ToolGateway
-from app.tools.registry import UnknownToolError, default_tool_registry
+from app.gateway import GatewayBlockedError, SecurityContext, ToolGateway
+from app.tools.registry import default_tool_registry
 
 gateway = ToolGateway(default_tool_registry)
 context = SecurityContext(request_id="tool-test")
@@ -64,8 +64,9 @@ async def test_invalid_arguments_never_reach_tool(tool_name: str, arguments: dic
 
 
 async def test_unknown_tool_cannot_execute() -> None:
-    with pytest.raises(UnknownToolError, match="Unknown tool"):
+    with pytest.raises(GatewayBlockedError, match="UNKNOWN_TOOL") as blocked:
         await gateway.execute(context, "delete_database", {})
+    assert blocked.value.decision.risk_score == 50
 
 
 def test_registry_exposes_json_schemas() -> None:

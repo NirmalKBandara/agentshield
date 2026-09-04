@@ -1,46 +1,58 @@
 import ipaddress
 import json
+import re
+import unicodedata
 from typing import Any
 from urllib.parse import urlsplit
 
+from app.gateway.risk import ReasonCode, result_for
 from app.gateway.schemas import SecurityContext, SecurityResult
 
 
 class PromptInjectionControl:
     name = "prompt-injection-detector"
-    _phrases = ("ignore all previous instructions", "disable your rules", "ignore your rules")
+    _patterns = (
+        re.compile(r"\bignore\s+(?:all\s+)?(?:previous|prior|system)\s+instructions?\b"),
+        re.compile(r"\b(?:disable|bypass|override)\s+(?:your\s+)?(?:rules|guardrails|policy)\b"),
+        re.compile(r"\b(?:reveal|print|show)\s+(?:the\s+)?system\s+prompt\b"),
+    )
 
     async def evaluate(
         self, context: SecurityContext, tool_name: str, arguments: dict[str, Any]
     ) -> SecurityResult:
-        prompt = context.user_prompt.casefold()
-        if any(phrase in prompt for phrase in self._phrases):
-            return SecurityResult(
+        prompt = unicodedata.normalize("NFKC", context.user_prompt).casefold()
+        if any(pattern.search(prompt) for pattern in self._patterns):
+            return result_for(
                 control=self.name,
                 outcome="block",
-                reason="PROMPT_INJECTION_DETECTED",
-                risk_score=95,
+                reason=ReasonCode.PROMPT_INJECTION,
             )
-        return SecurityResult(control=self.name, outcome="allow", reason="NO_PROMPT_INJECTION")
+        return result_for(control=self.name, outcome="allow", reason="NO_PROMPT_INJECTION")
 
 
 class SensitiveDataControl:
     name = "sensitive-data-detector"
-    _indicators = ("email", "phone", "account information", "customer records")
+    _indicators = (
+        re.compile(r"\be-?mail(?: address)?\b"),
+        re.compile(r"\bphone(?: number)?\b"),
+        re.compile(r"\baccount (?:information|details|number)\b"),
+        re.compile(r"\bcustomer records?\b"),
+    )
 
     async def evaluate(
         self, context: SecurityContext, tool_name: str, arguments: dict[str, Any]
     ) -> SecurityResult:
-        content = f"{context.user_prompt} {json.dumps(arguments, default=str)}".casefold()
-        matches = sum(indicator in content for indicator in self._indicators)
+        content = unicodedata.normalize(
+            "NFKC", f"{context.user_prompt} {json.dumps(arguments, default=str)}"
+        ).casefold()
+        matches = sum(pattern.search(content) is not None for pattern in self._indicators)
         if tool_name == "send_email" and matches >= 2:
-            return SecurityResult(
+            return result_for(
                 control=self.name,
                 outcome="block",
-                reason="SENSITIVE_DATA_EXFILTRATION_DETECTED",
-                risk_score=90,
+                reason=ReasonCode.SENSITIVE_DATA_EXFILTRATION,
             )
-        return SecurityResult(control=self.name, outcome="allow", reason="NO_SENSITIVE_DATA")
+        return result_for(control=self.name, outcome="allow", reason="NO_SENSITIVE_DATA")
 
 
 class NetworkDestinationControl:
@@ -52,19 +64,26 @@ class NetworkDestinationControl:
         if tool_name == "fetch_url":
             hostname = urlsplit(str(arguments.get("url", ""))).hostname
             try:
-                address = ipaddress.ip_address(hostname) if hostname else None
+                if hostname and hostname.isdecimal():
+                    address = ipaddress.ip_address(int(hostname))
+                else:
+                    address = ipaddress.ip_address(hostname) if hostname else None
             except ValueError:
                 address = None
-            if address and (
+            normalized_hostname = hostname.casefold().rstrip(".") if hostname else ""
+            unsafe_hostname = normalized_hostname == "localhost" or normalized_hostname.endswith(
+                ".localhost"
+            )
+            unsafe_address = address and (
                 address.is_private
                 or address.is_loopback
                 or address.is_link_local
                 or address.is_reserved
-            ):
-                return SecurityResult(
+            )
+            if unsafe_hostname or unsafe_address:
+                return result_for(
                     control=self.name,
                     outcome="block",
-                    reason="UNSAFE_NETWORK_DESTINATION",
-                    risk_score=100,
+                    reason=ReasonCode.UNSAFE_NETWORK_DESTINATION,
                 )
-        return SecurityResult(control=self.name, outcome="allow", reason="DESTINATION_ALLOWED")
+        return result_for(control=self.name, outcome="allow", reason="DESTINATION_ALLOWED")

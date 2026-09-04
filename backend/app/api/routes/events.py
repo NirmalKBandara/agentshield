@@ -11,7 +11,9 @@ from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.config import get_settings
 from app.core.database import get_session
+from app.gateway.risk import RiskThresholds, risk_level_for
 from app.models import Agent, SecurityEvent, ToolCall
 
 router = APIRouter(tags=["security"])
@@ -163,7 +165,10 @@ def _event_response(event: SecurityEvent) -> SecurityEventResponse:
         event_type=event.event_type,
         threat_category=event.event_type,
         severity=event.severity,
-        risk_level=event.severity,
+        risk_level=risk_level_for(
+            round(float(event.risk_score)),
+            RiskThresholds(*get_settings().risk_threshold_values),
+        ),
         message=event.message,
         reason=reason,
         risk_score=float(event.risk_score),
