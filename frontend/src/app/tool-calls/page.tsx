@@ -23,49 +23,46 @@ export default function ToolCallsPage() {
   const [toolCalls, setToolCalls] = useState<ToolCall[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [refresh, setRefresh] = useState(0);
   const [agent, setAgent] = useState("");
   const [tool, setTool] = useState("");
   const [decision, setDecision] = useState("");
   const [selectedCall, setSelectedCall] = useState<ToolCall | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     async function loadToolCalls() {
       setLoading(true);
       setError("");
       try {
         const query = buildToolCallsQuery({ agent, tool, decision });
-        const response = await fetch(`/api/tool-calls${query}`);
+        const response = await fetch(`/api/tool-calls${query}`, { signal: controller.signal });
         if (!response.ok) throw new Error("Failed to load tool calls");
-        setToolCalls((await response.json()) as ToolCall[]);
+        const data = (await response.json()) as ToolCall[];
+        if (!controller.signal.aborted) setToolCalls(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error loading tool calls");
+        if (!controller.signal.aborted) setError(err instanceof Error ? err.message : "Error loading tool calls");
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     }
     void loadToolCalls();
-  }, [agent, tool, decision]);
+    return () => controller.abort();
+  }, [agent, tool, decision, refresh]);
 
   return (
-    <main style={{ padding: "2rem" }}>
+    <main id="main-content" className="app-main" tabIndex={-1}>
       <header style={{ marginBottom: "2rem" }}>
         <h1>Tool Calls</h1>
         <p style={{ color: "var(--muted)", maxWidth: "48rem", lineHeight: 1.6 }}>
           Inspect every agent action, the gateway decision, risk, and safely masked inputs.
         </p>
-        <nav style={{ marginTop: "1rem" }}>
-          <Link href="/" style={{ marginRight: "1rem" }}>Home</Link>
-          <Link href="/dashboard" style={{ marginRight: "1rem" }}>Dashboard</Link>
-          <Link href="/playground" style={{ marginRight: "1rem" }}>Playground</Link>
-          <Link href="/security-events" style={{ marginRight: "1rem" }}>Security Events</Link>
-          <Link href="/policies">Policies</Link>
-        </nav>
       </header>
 
       {error && (
         <div className="error" role="alert">
           <strong>Tool calls unavailable</strong>
-          <p>{error}</p>
+          <p>{error}</p><button className="secondary-button" disabled={loading} onClick={() => setRefresh((value) => value + 1)}>Retry loading</button>
         </div>
       )}
 
@@ -98,7 +95,7 @@ export default function ToolCallsPage() {
         <h2 style={{ fontSize: "2rem", marginBottom: "1rem" }}>Audit log ({toolCalls.length})</h2>
         {loading ? (
           <p style={{ color: "var(--muted)" }}>Loading tool calls…</p>
-        ) : toolCalls.length === 0 ? (
+        ) : error ? null : toolCalls.length === 0 ? (
           <p style={{ color: "var(--muted)" }}>No tool calls match these filters.</p>
         ) : (
           <div style={{ overflowX: "auto" }}>
@@ -142,10 +139,10 @@ export default function ToolCallsPage() {
       </section>
 
       {selectedCall && (
-        <section role="dialog" aria-modal="true" aria-labelledby="tool-call-detail-title" style={{ marginTop: "2rem", padding: "1.25rem", border: "1px solid var(--line)", borderRadius: ".75rem", background: "var(--panel)" }}>
+        <section aria-labelledby="tool-call-detail-title" style={{ marginTop: "2rem", padding: "1.25rem", border: "1px solid var(--line)", borderRadius: ".75rem", background: "var(--panel)" }}>
           <h2 id="tool-call-detail-title" style={{ fontSize: "2rem" }}>Tool Call Details</h2>
           <button type="button" onClick={() => setSelectedCall(null)} style={{ margin: "1rem 0", padding: ".5rem 1rem", cursor: "pointer" }}>Close</button>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(18rem, 1fr))", gap: "1rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 18rem), 1fr))", gap: "1rem" }}>
             <div>
               <p><strong>ID:</strong> {selectedCall.id}</p>
               <p><strong>Request:</strong> {selectedCall.request_id}</p>

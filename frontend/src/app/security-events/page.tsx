@@ -1,18 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import {
   buildSecurityEventsQuery,
   eventReason,
   SecurityEvent,
-  severityColor,
 } from "@/lib/security-events";
 
 export default function SecurityEventsPage() {
   const [events, setEvents] = useState<SecurityEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [refresh, setRefresh] = useState(0);
   const [severity, setSeverity] = useState("");
   const [eventType, setEventType] = useState("");
   const [minimumRisk, setMinimumRisk] = useState(0);
@@ -24,6 +23,7 @@ export default function SecurityEventsPage() {
   const [selectedEvent, setSelectedEvent] = useState<SecurityEvent | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     async function loadEvents() {
       setLoading(true);
       setError("");
@@ -35,49 +35,30 @@ export default function SecurityEventsPage() {
           toolCallId: toolCallId || undefined,
         });
         const url = `/api/security-events${query}`;
-        const response = await fetch(url);
+        const response = await fetch(url, { signal: controller.signal });
         if (!response.ok) throw new Error("Failed to load events");
         const data = (await response.json()) as SecurityEvent[];
-        setEvents(data);
+        if (!controller.signal.aborted) setEvents(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error loading events");
+        if (!controller.signal.aborted) setError(err instanceof Error ? err.message : "Error loading events");
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     }
     void loadEvents();
-  }, [severity, eventType, minimumRisk, toolCallId]);
+    return () => controller.abort();
+  }, [severity, eventType, minimumRisk, toolCallId, refresh]);
 
-  if (loading) {
-    return (
-      <main style={{ padding: "2rem" }}>
-        <p>Loading security events...</p>
-      </main>
-    );
-  }
 
   return (
-    <main style={{ padding: "2rem" }}>
+    <main id="main-content" className="app-main" tabIndex={-1}>
       <header style={{ marginBottom: "2rem" }}>
         <h1>Security Events</h1>
-        <nav style={{ marginTop: "1rem" }}>
-          <Link href="/" style={{ marginRight: "1rem" }}>
-            Home
-          </Link>
-          <Link href="/dashboard" style={{ marginRight: "1rem" }}>
-            Dashboard
-          </Link>
-          <Link href="/playground" style={{ marginRight: "1rem" }}>
-            Playground
-          </Link>
-          <Link href="/tool-calls" style={{ marginRight: "1rem" }}>Tool Calls</Link>
-          <Link href="/policies">Policies</Link>
-        </nav>
       </header>
 
       {error && (
-        <div style={{ padding: "1rem", backgroundColor: "#ffebee", borderRadius: "0.25rem" }}>
-          <p>Error: {error}</p>
+        <div className="error" role="alert">
+          <p>{error}</p><button className="secondary-button" disabled={loading} onClick={() => setRefresh((value) => value + 1)}>Retry loading</button>
         </div>
       )}
 
@@ -113,79 +94,19 @@ export default function SecurityEventsPage() {
             </select>
           </label>
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "1rem" }}>
-          <button
-            onClick={() => setSeverity("")}
-            style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: !severity ? "#087f5b" : "#ddd",
-              color: !severity ? "white" : "black",
-              border: "none",
-              borderRadius: "0.25rem",
-              cursor: "pointer",
-            }}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setSeverity("critical")}
-            style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: severity === "critical" ? "#dc3545" : "#ddd",
-              color: severity === "critical" ? "white" : "black",
-              border: "none",
-              borderRadius: "0.25rem",
-              cursor: "pointer",
-            }}
-          >
-            Critical
-          </button>
-          <button
-            onClick={() => setSeverity("high")}
-            style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: severity === "high" ? "#ff9800" : "#ddd",
-              color: severity === "high" ? "white" : "black",
-              border: "none",
-              borderRadius: "0.25rem",
-              cursor: "pointer",
-            }}
-          >
-            High
-          </button>
-          <button
-            onClick={() => setSeverity("warning")}
-            style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: severity === "warning" ? "#ffc107" : "#ddd",
-              color: severity === "warning" ? "white" : "black",
-              border: "none",
-              borderRadius: "0.25rem",
-              cursor: "pointer",
-            }}
-          >
-            Warning
-          </button>
-          <button
-            onClick={() => setSeverity("low")}
-            style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: severity === "low" ? "#087f5b" : "#ddd",
-              color: severity === "low" ? "white" : "black",
-              border: "none",
-              borderRadius: "0.25rem",
-              cursor: "pointer",
-            }}
-          >
-            Low
-          </button>
+        <div className="examples" role="group" aria-label="Filter by severity">
+          {["", "critical", "high", "medium", "warning", "low"].map((level) => (
+            <button key={level} type="button" aria-pressed={severity === level} onClick={() => setSeverity(level)}>
+              {level ? level.charAt(0).toUpperCase() + level.slice(1) : "All severities"}
+            </button>
+          ))}
         </div>
       </section>
 
       <section style={{ marginBottom: "2rem" }}>
         <h2>Events ({events.length})</h2>
-        {events.length === 0 ? (
-          <p style={{ color: "#999" }}>No security events found.</p>
+        {loading ? <p className="loading-state" role="status">Loading security events…</p> : error ? null : events.length === 0 ? (
+          <p className="empty-state">No security events match these filters. Try another severity or clear the event type and minimum risk.</p>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -206,17 +127,7 @@ export default function SecurityEventsPage() {
                       <code style={{ fontSize: "0.85rem" }}>{event.event_type}</code>
                     </td>
                     <td style={{ padding: "0.5rem" }}>
-                      <span
-                        style={{
-                          padding: "0.25rem 0.5rem",
-                          borderRadius: "0.25rem",
-                          backgroundColor: severityColor(event.severity),
-                          color: "white",
-                          fontSize: "0.875rem",
-                        }}
-                      >
-                        {event.severity}
-                      </span>
+                      <span className={`severity severity--${event.severity}`}>{event.severity}</span>
                     </td>
                     <td style={{ padding: "0.5rem" }}>{eventReason(event)}</td>
                     <td style={{ textAlign: "right", padding: "0.5rem" }}>
@@ -251,8 +162,6 @@ export default function SecurityEventsPage() {
 
       {selectedEvent && (
         <section
-          role="dialog"
-          aria-modal="true"
           aria-labelledby="event-detail-title"
           style={{ marginTop: "2rem", padding: "1rem", backgroundColor: "var(--panel)", border: "1px solid var(--line)" }}
         >
@@ -302,7 +211,7 @@ export default function SecurityEventsPage() {
             </p>
             <pre
               style={{
-                backgroundColor: "#fff",
+                backgroundColor: "var(--panel)",
                 padding: "0.5rem",
                 borderRadius: "0.25rem",
                 overflow: "auto",

@@ -2208,22 +2208,22 @@ Tasks:
 
 Tasks:
 
-- [ ] Navigation
-- [ ] Empty states
-- [ ] Loading states
-- [ ] Error states
-- [ ] Responsive layout
-- [ ] Consistent terminology
-- [ ] Security-friendly visual hierarchy
+- [x] Navigation
+- [x] Empty states
+- [x] Loading states
+- [x] Error states
+- [x] Responsive layout
+- [x] Consistent terminology
+- [x] Security-friendly visual hierarchy
 
 Week 3 acceptance criteria:
 
-- [ ] Dashboard works
-- [ ] Security Events works
-- [ ] Tool Calls works
-- [ ] Policies work
-- [ ] Red Team Lab works
-- [ ] Six attacks reproducible
+- [x] Dashboard works
+- [x] Security Events works
+- [x] Tool Calls works
+- [x] Policies work
+- [x] Red Team Lab works
+- [x] Six attacks reproducible
 
 ---
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main style={{ padding: "2rem" }}>
+    <main id="main-content" className="app-main" tabIndex={-1}>
       <header style={{ marginBottom: "3rem" }}>
         <h1 style={{ fontSize: "3rem", marginBottom: "0.5rem" }}>AgentShield</h1>
         <p style={{ fontSize: "1.25rem", color: "#666" }}>
