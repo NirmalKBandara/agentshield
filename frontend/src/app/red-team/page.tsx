@@ -1,9 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { ThemeToggle } from "@/components/theme-toggle";
 import {
   formatControl,
   type RedTeamRun,
@@ -32,9 +30,12 @@ export default function RedTeamPage() {
   const [running, setRunning] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
     async function loadScenarios() {
+      setLoading(true);
+      setError("");
       try {
         const response = await fetch("/api/red-team/scenarios", { cache: "no-store" });
         const payload = (await response.json()) as RedTeamScenario[] | { detail?: unknown };
@@ -47,7 +48,7 @@ export default function RedTeamPage() {
       }
     }
     void loadScenarios();
-  }, []);
+  }, [refresh]);
 
   async function runAttack(scenarioId: string) {
     setRunning(scenarioId);
@@ -69,30 +70,24 @@ export default function RedTeamPage() {
   }
 
   return (
-    <main style={{ padding: "2rem" }}>
+    <main id="main-content" className="app-main" tabIndex={-1}>
       <header style={{ marginBottom: "2.5rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem" }}>
           <div>
             <p className="eyebrow">Deterministic security testing</p>
-            <h1 style={{ fontSize: "clamp(3rem, 8vw, 6rem)" }}>Red Team Lab</h1>
+            <h1>Red Team Lab</h1>
           </div>
-          <ThemeToggle />
         </div>
         <p className="lede" style={{ marginTop: "1.5rem" }}>
           Reproduce six safe attack simulations. AgentShield evaluates every requested action,
           blocks the threat before tool execution, and records a security event.
         </p>
-        <nav style={{ marginTop: "1.25rem", display: "flex", flexWrap: "wrap", gap: "1rem" }}>
-          <Link href="/">Home</Link><Link href="/dashboard">Dashboard</Link>
-          <Link href="/playground">Playground</Link><Link href="/security-events">Events</Link>
-          <Link href="/tool-calls">Tool Calls</Link><Link href="/policies">Policies</Link>
-        </nav>
       </header>
 
-      {error && <div className="error" role="alert"><strong>Red Team Lab error</strong><p>{error}</p></div>}
+      {error && <div className="error" role="alert"><strong>Red Team Lab error</strong><p>{error}</p><button className="secondary-button" disabled={loading} onClick={() => setRefresh((value) => value + 1)}>Retry loading</button></div>}
       {loading ? (
         <div className="loading-state" aria-live="polite"><span className="loading-state__pulse" /><strong>Loading attack scenarios…</strong></div>
-      ) : scenarios.length === 0 ? (
+      ) : error && scenarios.length === 0 ? null : scenarios.length === 0 ? (
         <p className="empty">No attack scenarios are available.</p>
       ) : (
         <section aria-label="Attack scenarios" style={{ display: "grid", gap: "1.25rem" }}>
@@ -111,7 +106,7 @@ export default function RedTeamPage() {
                   </button>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))", gap: "1rem", marginTop: "1rem" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 16rem), 1fr))", gap: "1rem", marginTop: "1rem" }}>
                   <div className="trace-card"><h3>Payload</h3><pre>{JSON.stringify(scenario.payload, null, 2)}</pre></div>
                   <div className="trace-card"><h3>Requested action</h3><pre>{JSON.stringify(scenario.requested_action, null, 2)}</pre></div>
                 </div>
@@ -120,7 +115,7 @@ export default function RedTeamPage() {
                   <section aria-label={`${scenario.name} result`} style={{ ...panelStyle, marginTop: "1rem", background: "var(--accent-soft)" }}>
                     <div className="result-meta">
                       <span>Decision: {result.decision.toUpperCase()}</span>
-                      <span>Score: {result.score}/100 · {riskLabel(result.score)}</span>
+                      <span>Score: {result.score}/100 · {riskLabel(result.score, result.risk_level)}</span>
                     </div>
                     <p><strong>Reason:</strong> <code>{result.reason}</code></p>
                     <p><strong>Triggered controls:</strong> {result.triggered_controls.map(formatControl).join(", ")}</p>

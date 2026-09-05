@@ -8,11 +8,21 @@ describe("red-team result presentation", () => {
     expect(formatControl("policy-limits")).toBe("Policy Limits");
   });
 
+  it("uses the backend risk level when policy thresholds differ", () => {
+    expect(riskLabel(80, "medium")).toBe("Medium");
+    expect(riskLabel(20, "high")).toBe("High");
+  });
+
   it("maps bounded scores to risk labels", () => {
     expect(riskLabel(100)).toBe("Critical");
     expect(riskLabel(90)).toBe("Critical");
-    expect(riskLabel(80)).toBe("High");
-    expect(riskLabel(65)).toBe("Medium");
+    expect(riskLabel(80)).toBe("Critical");
+    expect(riskLabel(79)).toBe("High");
+    expect(riskLabel(60)).toBe("High");
+    expect(riskLabel(59)).toBe("Medium");
+    expect(riskLabel(30)).toBe("Medium");
+    expect(riskLabel(29)).toBe("Low");
+    expect(riskLabel(65)).toBe("High");
     expect(riskLabel(0)).toBe("Low");
   });
 });

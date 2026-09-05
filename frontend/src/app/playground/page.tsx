@@ -1,8 +1,6 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import Link from "next/link";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { AgentResult, presentAgentResult } from "@/lib/agent-result";
 
 type ConnectionState = "checking" | "connected" | "unavailable";
@@ -60,29 +58,12 @@ export default function Playground() {
   const presentation = result ? presentAgentResult(result) : null;
 
   return (
-    <main style={{ padding: "2rem" }}>
+    <main id="main-content" className="app-main" tabIndex={-1}>
       <header style={{ marginBottom: "2rem" }}>
-        <h1>AgentShield - Agent Playground</h1>
-        <nav style={{ marginTop: "1rem" }}>
-          <Link href="/dashboard" style={{ marginRight: "1rem" }}>
-            Dashboard
-          </Link>
-          <Link href="/security-events" style={{ marginRight: "1rem" }}>
-            Security Events
-          </Link>
-          <Link href="/tool-calls" style={{ marginRight: "1rem" }}>Tool Calls</Link>
-          <Link href="/policies" style={{ marginRight: "1rem" }}>Policies</Link>
-          <Link href="/red-team">Red Team Lab</Link>
-        </nav>
+        <h1>Agent Playground</h1>
       </header>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "2rem",
-        }}
-      >
+      <div className="playground-grid">
         <section>
           <h2>Agent Request</h2>
           <div
@@ -92,7 +73,7 @@ export default function Playground() {
               gap: "0.5rem",
               marginBottom: "1rem",
               padding: "1rem",
-              backgroundColor: connection === "connected" ? "#e8f5e9" : "#ffebee",
+              backgroundColor: "var(--panel)",
               borderRadius: "0.5rem",
             }}
           >
@@ -135,7 +116,7 @@ export default function Playground() {
               }}
             />
             <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
-              <p style={{ fontSize: "0.875rem", color: "#666", marginBottom: "0.5rem" }}>
+              <p style={{ fontSize: "0.875rem", color: "var(--muted)", marginBottom: "0.5rem" }}>
                 Try these examples:
               </p>
               {examples.map((ex) => (
@@ -150,7 +131,7 @@ export default function Playground() {
                     padding: "0.5rem",
                     width: "100%",
                     textAlign: "left",
-                    backgroundColor: "#f5f5f5",
+                    backgroundColor: "var(--panel)",
                     border: "1px solid #ddd",
                     borderRadius: "0.25rem",
                     cursor: "pointer",
@@ -188,15 +169,15 @@ export default function Playground() {
               <p>
                 <strong>Processing request...</strong>
               </p>
-              <p style={{ fontSize: "0.875rem", color: "#666" }}>
+              <p style={{ fontSize: "0.875rem", color: "var(--muted)" }}>
                 Agent is analyzing your request and selecting a tool.
               </p>
             </div>
           )}
 
           {!running && !result && !error && (
-            <div style={{ padding: "1rem", backgroundColor: "#f5f5f5", borderRadius: "0.25rem" }}>
-              <p style={{ color: "#999" }}>
+            <div style={{ padding: "1rem", backgroundColor: "var(--panel)", borderRadius: "0.25rem" }}>
+              <p style={{ color: "var(--muted)" }}>
                 Submit a request to see the agent response, selected tool, arguments, and result.
               </p>
             </div>
@@ -222,15 +203,15 @@ export default function Playground() {
               <div
                 style={{
                   padding: "1rem",
-                  backgroundColor: "#f5f5f5",
+                  backgroundColor: "var(--panel)",
                   borderRadius: "0.25rem",
                   marginBottom: "1rem",
                 }}
               >
-                <p style={{ fontSize: "0.875rem", color: "#666", marginBottom: "0.25rem" }}>
+                <p style={{ fontSize: "0.875rem", color: "var(--muted)", marginBottom: "0.25rem" }}>
                   Request ID: {result.request_id}
                 </p>
-                <p style={{ fontSize: "0.875rem", color: "#666" }}>
+                <p style={{ fontSize: "0.875rem", color: "var(--muted)" }}>
                   Provider: {result.provider}
                 </p>
               </div>
@@ -239,7 +220,7 @@ export default function Playground() {
                 style={{
                   marginBottom: "1rem",
                   padding: "1rem",
-                  backgroundColor: "#fff3e0",
+                  backgroundColor: "var(--panel)",
                   borderRadius: "0.25rem",
                 }}
               >
@@ -253,7 +234,7 @@ export default function Playground() {
                     style={{
                       marginBottom: "1rem",
                       padding: "1rem",
-                      backgroundColor: "#e8f5e9",
+                      backgroundColor: "var(--panel)",
                       borderRadius: "0.25rem",
                     }}
                   >
@@ -277,7 +258,7 @@ export default function Playground() {
                         fontSize: "0.75rem",
                         overflow: "auto",
                         maxHeight: "150px",
-                        backgroundColor: "#fff",
+                        backgroundColor: "var(--panel)",
                         padding: "0.5rem",
                         borderRadius: "0.25rem",
                       }}
@@ -300,7 +281,7 @@ export default function Playground() {
                           fontSize: "0.75rem",
                           overflow: "auto",
                           maxHeight: "150px",
-                          backgroundColor: "#fff",
+                          backgroundColor: "var(--panel)",
                           padding: "0.5rem",
                           borderRadius: "0.25rem",
                         }}

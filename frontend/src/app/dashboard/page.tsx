@@ -27,172 +27,87 @@ export default function DashboardPage() {
   const [events, setEvents] = useState<RecentEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
+    const controller = new AbortController();
     async function loadDashboard() {
+      setLoading(true);
+      setError("");
       try {
-        const [summaryRes, eventsRes] = await Promise.all([
-          fetch("/api/dashboard-summary"),
-          fetch("/api/dashboard-events"),
+        const responses = await Promise.all([
+          fetch("/api/dashboard-summary", { signal: controller.signal, cache: "no-store" }),
+          fetch("/api/dashboard-events", { signal: controller.signal, cache: "no-store" }),
         ]);
-        if (!summaryRes.ok || !eventsRes.ok) throw new Error("Failed to load dashboard");
-        const summaryData = (await summaryRes.json()) as DashboardSummary;
-        const eventsData = (await eventsRes.json()) as RecentEvent[];
-        setSummary(summaryData);
-        setEvents(eventsData);
+        if (responses.some((response) => !response.ok)) throw new Error("Dashboard data could not be loaded. Try again.");
+        const [summaryData, eventsData] = await Promise.all(responses.map((response) => response.json()));
+        if (!controller.signal.aborted) {
+          setSummary(summaryData as DashboardSummary);
+          setEvents(eventsData as RecentEvent[]);
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error loading dashboard");
+        if (!controller.signal.aborted) setError(err instanceof Error ? err.message : "Dashboard unavailable");
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     }
     void loadDashboard();
-  }, []);
+    return () => controller.abort();
+  }, [refresh]);
 
-  if (loading) {
-    return (
-      <main>
-        <div style={{ padding: "2rem", textAlign: "center" }}>
-          <p>Loading dashboard...</p>
-        </div>
-      </main>
-    );
-  }
-
-  if (error) {
-    return (
-      <main>
-        <div style={{ padding: "2rem", color: "red" }}>
-          <p>Error: {error}</p>
-        </div>
-      </main>
-    );
-  }
-
-  const blockRate =
-    summary && summary.total_requests > 0
-      ? Math.round((summary.blocked_requests / summary.total_requests) * 100)
-      : 0;
+  const blockRate = summary && summary.total_requests > 0
+    ? Math.round((summary.blocked_requests / summary.total_requests) * 100) : 0;
 
   return (
-    <main style={{ padding: "2rem" }}>
-      <header style={{ marginBottom: "2rem" }}>
-        <h1>AgentShield Dashboard</h1>
-        <nav style={{ marginTop: "1rem" }}>
-          <Link href="/playground" style={{ marginRight: "1rem" }}>
-            Playground
-          </Link>
-          <Link href="/security-events" style={{ marginRight: "1rem" }}>
-            Security Events
-          </Link>
-          <Link href="/tool-calls" style={{ marginRight: "1rem" }}>Tool Calls</Link>
-          <Link href="/policies">Policies</Link>
-        </nav>
+    <main id="main-content" className="app-main" tabIndex={-1}>
+      <header className="page-actions">
+        <div>
+          <p className="eyebrow">Security monitoring</p>
+          <h1>Dashboard</h1>
+          <p className="page-intro">Review gateway decisions and investigate recent security events.</p>
+        </div>
+        <button className="secondary-button" onClick={() => setRefresh((value) => value + 1)} disabled={loading}>
+          {loading ? "Refreshing…" : "Refresh dashboard"}
+        </button>
       </header>
-
-      <section style={{ marginBottom: "2rem" }}>
-        <h2>Security Overview</h2>
-        {summary && (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-              gap: "1rem",
-            }}
-          >
-            <div style={{ border: "1px solid #ccc", padding: "1rem" }}>
-              <div style={{ fontSize: "0.875rem", color: "#666" }}>Total Requests</div>
-              <div style={{ fontSize: "2rem", fontWeight: "bold" }}>
-                {summary.total_requests}
+      {loading ? (
+        <div className="loading-state" role="status"><span className="loading-state__pulse" aria-hidden="true" /><strong>Loading security overview…</strong></div>
+      ) : error ? (
+        <div className="error" role="alert"><strong>Dashboard unavailable</strong><p>{error}</p></div>
+      ) : summary && (
+        <>
+          <section aria-labelledby="overview-title">
+            <h2 id="overview-title">Security overview</h2>
+            <dl className="metric-grid">
+              <div className="metric-card metric-card--critical"><dt>Critical events</dt><dd>{summary.critical_events}</dd></div>
+              <div className="metric-card metric-card--high"><dt>High-risk events</dt><dd>{summary.high_risk_events}</dd></div>
+              <div className="metric-card"><dt>Blocked requests</dt><dd>{summary.blocked_requests}</dd><small>{blockRate}% of total requests</small></div>
+              <div className="metric-card"><dt>Total requests</dt><dd>{summary.total_requests}</dd></div>
+              <div className="metric-card"><dt>Succeeded requests</dt><dd>{summary.allowed_requests}</dd></div>
+              <div className="metric-card"><dt>Most attacked tool</dt><dd>{summary.most_attacked_tool || "None recorded"}</dd></div>
+              <div className="metric-card"><dt>Most common attack</dt><dd>{summary.most_common_attack || "None recorded"}</dd></div>
+            </dl>
+          </section>
+          <section aria-labelledby="recent-events-title">
+            <div className="page-actions"><h2 id="recent-events-title">Recent security events</h2><Link href="/security-events">View all security events →</Link></div>
+            {events.length === 0 ? (
+              <div className="empty-state"><strong>No security events recorded</strong><p>Run a request in the <Link href="/playground">Agent Playground</Link> or try a simulation in the <Link href="/red-team">Red Team Lab</Link> to inspect gateway decisions here.</p></div>
+            ) : (
+              <div className="table-scroll" role="region" aria-label="Recent security events" tabIndex={0}>
+                <table className="data-table">
+                  <thead><tr><th scope="col">Type</th><th scope="col">Severity</th><th scope="col">Message</th><th scope="col">Risk score</th><th scope="col">Time</th></tr></thead>
+                  <tbody>{events.map((event) => (
+                    <tr key={event.id}>
+                      <td>{event.event_type}</td><td><span className={`severity severity--${event.severity}`}>{event.severity}</span></td>
+                      <td>{event.message}</td><td>{event.risk_score.toFixed(1)}</td><td>{new Date(event.created_at).toLocaleString()}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
               </div>
-            </div>
-            <div style={{ border: "1px solid #ccc", padding: "1rem" }}>
-              <div style={{ fontSize: "0.875rem", color: "#666" }}>Allowed</div>
-              <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#28a745" }}>
-                {summary.allowed_requests}
-              </div>
-            </div>
-            <div style={{ border: "1px solid #ccc", padding: "1rem" }}>
-              <div style={{ fontSize: "0.875rem", color: "#666" }}>Blocked</div>
-              <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#dc3545" }}>
-                {summary.blocked_requests}
-              </div>
-              <div style={{ fontSize: "0.875rem", color: "#999" }}>({blockRate}% block rate)</div>
-            </div>
-            <div style={{ border: "1px solid #ccc", padding: "1rem" }}>
-              <div style={{ fontSize: "0.875rem", color: "#666" }}>High Risk Events</div>
-              <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#ff9800" }}>
-                {summary.high_risk_events}
-              </div>
-            </div>
-            <div style={{ border: "1px solid #ccc", padding: "1rem" }}>
-              <div style={{ fontSize: "0.875rem", color: "#666" }}>Critical Events</div>
-              <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#dc3545" }}>
-                {summary.critical_events}
-              </div>
-            </div>
-            <div style={{ border: "1px solid #ccc", padding: "1rem" }}>
-              <div style={{ fontSize: "0.875rem", color: "#666" }}>Most Attacked Tool</div>
-              <div style={{ fontSize: "1.25rem", fontWeight: "bold" }}>
-                {summary.most_attacked_tool || "N/A"}
-              </div>
-            </div>
-          </div>
-        )}
-      </section>
-
-      <section>
-        <h2>Recent Security Events</h2>
-        {events.length === 0 ? (
-          <p style={{ color: "#999" }}>No security events yet.</p>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "2px solid #ddd" }}>
-                  <th style={{ textAlign: "left", padding: "0.5rem" }}>Type</th>
-                  <th style={{ textAlign: "left", padding: "0.5rem" }}>Severity</th>
-                  <th style={{ textAlign: "left", padding: "0.5rem" }}>Message</th>
-                  <th style={{ textAlign: "right", padding: "0.5rem" }}>Risk Score</th>
-                  <th style={{ textAlign: "left", padding: "0.5rem" }}>Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {events.map((event) => (
-                  <tr key={event.id} style={{ borderBottom: "1px solid #eee" }}>
-                    <td style={{ padding: "0.5rem" }}>{event.event_type}</td>
-                    <td style={{ padding: "0.5rem" }}>
-                      <span
-                        style={{
-                          padding: "0.25rem 0.5rem",
-                          borderRadius: "0.25rem",
-                          backgroundColor:
-                            event.severity === "critical"
-                              ? "#dc3545"
-                              : event.severity === "high"
-                                ? "#ff9800"
-                                : "#ffc107",
-                          color: "white",
-                          fontSize: "0.875rem",
-                        }}
-                      >
-                        {event.severity}
-                      </span>
-                    </td>
-                    <td style={{ padding: "0.5rem" }}>{event.message}</td>
-                    <td style={{ textAlign: "right", padding: "0.5rem" }}>
-                      {event.risk_score.toFixed(1)}
-                    </td>
-                    <td style={{ padding: "0.5rem", fontSize: "0.875rem", color: "#999" }}>
-                      {new Date(event.created_at).toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+            )}
+          </section>
+        </>
+      )}
     </main>
   );
 }

@@ -1,6 +1,6 @@
 # AgentShield
 
-AgentShield is an AI-agent security gateway. The Day 20 milestone delivers a
+AgentShield is an AI-agent security gateway. The Day 21 milestone delivers a
 working Next.js playground, FastAPI backend, PostgreSQL audit storage, a
 deny-by-default security gateway, and four controlled demo tools in a Docker
 Compose stack.
@@ -30,6 +30,8 @@ Compose stack.
 - The risk engine combines independent signals into a deterministic 0–100 score,
   exposes stable reason codes and readable explanations, and maps configurable
   thresholds to low, medium, high, and critical levels.
+- Shared navigation, responsive workspaces, and retry controls keep investigations
+  accessible through loading, empty, and error states.
 - Alembic reproduces and upgrades the eight-table database schema.
 - Unit tests, an opt-in integration test, Docker healthchecks, and CI are included.
 
@@ -156,6 +158,7 @@ for the exact commands, PR flow, and recommended branch protection.
 - [Day 18 completion summary](docs/project/day-18-policies.md)
 - [Day 19 completion summary](docs/project/day-19-red-team-lab.md)
 - [Day 20 completion summary](docs/project/day-20-risk-engine.md)
+- [Day 21 completion summary](docs/project/day-21-ui-polish.md)
 
 ## License
 

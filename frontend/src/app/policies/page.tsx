@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 
 import {
@@ -40,10 +39,13 @@ export default function PoliciesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState("");
   const [error, setError] = useState("");
+  const [refresh, setRefresh] = useState(0);
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
     async function initialize() {
+      setLoading(true);
+      setError("");
       try {
         const data = await fetchOverview();
         setOverview(data);
@@ -58,7 +60,7 @@ export default function PoliciesPage() {
       }
     }
     void initialize();
-  }, []);
+  }, [refresh]);
 
   async function reloadOverview() {
     const data = await fetchOverview();
@@ -124,35 +126,27 @@ export default function PoliciesPage() {
   }
 
   return (
-    <main style={{ padding: "2rem" }}>
+    <main id="main-content" className="app-main" tabIndex={-1}>
       <header style={{ marginBottom: "2rem" }}>
         <h1>Security Policies</h1>
         <p style={{ color: "var(--muted)", maxWidth: "48rem", lineHeight: 1.6 }}>
           Manage the demo agent&apos;s least-privilege tool access and runtime safety limits.
         </p>
-        <nav style={{ marginTop: "1rem" }}>
-          <Link href="/" style={{ marginRight: "1rem" }}>Home</Link>
-          <Link href="/dashboard" style={{ marginRight: "1rem" }}>Dashboard</Link>
-          <Link href="/playground" style={{ marginRight: "1rem" }}>Playground</Link>
-          <Link href="/security-events" style={{ marginRight: "1rem" }}>Security Events</Link>
-          <Link href="/tool-calls" style={{ marginRight: "1rem" }}>Tool Calls</Link>
-          <Link href="/red-team">Red Team Lab</Link>
-        </nav>
       </header>
 
-      {error && <div className="error" role="alert"><strong>Policy update failed</strong><p>{error}</p></div>}
+      {error && <div className="error" role="alert"><strong>Security Policies unavailable or update failed</strong><p>{error}</p><button className="secondary-button" disabled={loading} onClick={() => setRefresh((value) => value + 1)}>Retry loading</button></div>}
       {success && <p role="status" style={{ padding: "1rem", border: "1px solid var(--accent)", borderRadius: ".6rem" }}>{success}</p>}
 
       {loading ? (
         <p aria-live="polite" style={{ color: "var(--muted)" }}>Loading policies…</p>
-      ) : !overview || overview.policies.length === 0 ? (
+      ) : error && !overview ? null : !overview || overview.policies.length === 0 ? (
         <p style={{ color: "var(--muted)" }}>No configurable policies are available. Run the latest database migration.</p>
       ) : (
         <>
           <section style={{ marginBottom: "3rem" }} aria-labelledby="runtime-limits">
             <h2 id="runtime-limits" style={{ fontSize: "2.4rem", marginBottom: ".5rem" }}>Runtime limits</h2>
             <p style={{ color: "var(--muted)" }}>{overview.policies[0].description}</p>
-            <form onSubmit={updateLimits} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(14rem, 1fr))", gap: "1rem", maxWidth: "48rem", alignItems: "end" }}>
+            <form onSubmit={updateLimits} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 14rem), 1fr))", gap: "1rem", maxWidth: "48rem", alignItems: "end" }}>
               <label>
                 <span style={{ display: "block", marginBottom: ".4rem" }}>Maximum refund amount</span>
                 <input aria-describedby="refund-help" type="number" min="0.01" max="10000" step="0.01" value={refundLimit} onChange={(event) => setRefundLimit(event.target.value)} style={controlStyle} />

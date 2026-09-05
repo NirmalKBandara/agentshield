@@ -16,6 +16,7 @@ export type RedTeamRun = {
   triggered_controls: string[];
   reason: string;
   score: number;
+  risk_level?: "critical" | "high" | "medium" | "low";
   decision: "block";
   created_at: string;
 };
@@ -28,9 +29,13 @@ export function formatControl(control: string): string {
     .join(" ");
 }
 
-export function riskLabel(score: number): "Critical" | "High" | "Medium" | "Low" {
-  if (score >= 90) return "Critical";
-  if (score >= 70) return "High";
-  if (score >= 40) return "Medium";
+export function riskLabel(score: number, level?: RedTeamRun["risk_level"]): "Critical" | "High" | "Medium" | "Low" {
+  if (level === "critical") return "Critical";
+  if (level === "high") return "High";
+  if (level === "medium") return "Medium";
+  if (level === "low") return "Low";
+  if (score >= 80) return "Critical";
+  if (score >= 60) return "High";
+  if (score >= 30) return "Medium";
   return "Low";
 }
