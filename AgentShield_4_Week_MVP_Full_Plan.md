@@ -2346,8 +2346,8 @@ Tasks:
 - [x] Run six attack demos
 - [x] Record screenshots
 - [x] Fix critical bugs
-- [ ] Create GitHub release
-- [ ] Tag `v1.0.0`
+- [x] Create GitHub release
+- [x] Tag `v1.0.0`
 - [x] Prepare interview explanation
 - [x] Prepare 5-minute demo
 - [x] Prepare 10-minute demo
