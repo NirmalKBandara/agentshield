@@ -5,7 +5,7 @@
 **Target Version:** v1.0.0 MVP  
 **Target Duration:** 4 weeks / 28 days  
 **Recommended Effort:** 3–4 focused hours per day  
-**Primary Goal:** Build a complete, interview-ready web-based security platform that protects tool-using AI agents before they access APIs, databases, URLs, email systems, or other external tools.
+**Primary Goal:** Build a complete, interview-ready web-based security platform that protects tool-using AI agents before they access APIs, databases, URLs, email sAgentShield_4_Week_MVP_Full_Planystems, or other external tools.
 
 ---
 
@@ -2233,13 +2233,13 @@ Week 3 acceptance criteria:
 
 Tasks:
 
-- [ ] Create architecture diagram
-- [ ] List assets
-- [ ] List trust boundaries
-- [ ] STRIDE table
-- [ ] Mitigations
-- [ ] Residual risks
-- [ ] Save `docs/threat-model.md`
+- [x] Create architecture diagram
+- [x] List assets
+- [x] List trust boundaries
+- [x] STRIDE table
+- [x] Mitigations
+- [x] Residual risks
+- [x] Save `docs/threat-model.md`
 
 ---
 
