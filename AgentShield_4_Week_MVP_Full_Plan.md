@@ -2325,16 +2325,16 @@ Tasks:
 
 Complete:
 
-- [ ] README
-- [ ] architecture
-- [ ] threat model
-- [ ] security controls
-- [ ] attack scenarios
-- [ ] setup
-- [ ] API docs
-- [ ] limitations
-- [ ] screenshots
-- [ ] demo guide
+- [x] README
+- [x] architecture
+- [x] threat model
+- [x] security controls
+- [x] attack scenarios
+- [x] setup
+- [x] API docs
+- [x] limitations
+- [x] screenshots
+- [x] demo guide
 
 ---
 
