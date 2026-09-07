@@ -28,5 +28,6 @@ separately managed local Ollama service.
 
 The CI Compose job performs this runtime validation on every change, prints
 container logs on failure, and always removes its containers and test volume.
-The frontend probe performs a real `GET` because the Next.js health proxy does
-not expose a separate `HEAD` handler.
+The frontend probe uses the image's Node runtime to perform a real `GET` against
+the IPv4 loopback address. This avoids a `HEAD` mismatch and BusyBox/IPv6
+differences while still verifying the Next.js-to-FastAPI proxy.
