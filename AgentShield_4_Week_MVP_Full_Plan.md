@@ -2310,14 +2310,14 @@ starts the MVP.
 
 Tasks:
 
-- [ ] GitHub Actions
-- [ ] lint
-- [ ] tests
-- [ ] Semgrep
-- [ ] Gitleaks
-- [ ] dependency audit
-- [ ] Trivy
-- [ ] fail build on important issues
+- [x] GitHub Actions
+- [x] lint
+- [x] tests
+- [x] Semgrep
+- [x] Gitleaks
+- [x] dependency audit
+- [x] Trivy
+- [x] fail build on important issues
 
 ---
 
