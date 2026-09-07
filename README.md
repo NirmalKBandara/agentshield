@@ -1,5 +1,7 @@
 # AgentShield
 
+[![Release](https://img.shields.io/badge/release-v1.0.0-087f5b)](CHANGELOG.md)
+
 AgentShield is an AI-agent security gateway. The v1.0.0 MVP delivers a
 working Next.js playground, FastAPI backend, PostgreSQL audit storage, a
 deny-by-default security gateway, and four controlled demo tools in a Docker
@@ -160,6 +162,7 @@ for the exact commands, PR flow, and recommended branch protection.
 - [MVP limitations](docs/limitations.md)
 - [Demo and interview guide](docs/demo-guide.md)
 - [Product screenshots](docs/screenshots/README.md)
+- [v1.0.0 release notes](docs/releases/v1.0.0.md)
 - [Database schema and migrations](docs/database.md)
 - [Git and GitHub guide](docs/git-workflow.md)
 - [Day 16 completion summary](docs/project/day-16-security-events.md)
@@ -174,6 +177,7 @@ for the exact commands, PR flow, and recommended branch protection.
 - [Day 25 completion summary](docs/project/day-25-docker-compose.md)
 - [Day 26 completion summary](docs/project/day-26-devsecops-security.md)
 - [Day 27 completion summary](docs/project/day-27-documentation.md)
+- [Day 28 completion summary](docs/project/day-28-release.md)
 
 ## License
 

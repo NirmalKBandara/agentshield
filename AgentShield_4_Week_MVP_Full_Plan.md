@@ -2342,15 +2342,15 @@ Complete:
 
 Tasks:
 
-- [ ] Run all tests
-- [ ] Run six attack demos
-- [ ] Record screenshots
-- [ ] Fix critical bugs
+- [x] Run all tests
+- [x] Run six attack demos
+- [x] Record screenshots
+- [x] Fix critical bugs
 - [ ] Create GitHub release
 - [ ] Tag `v1.0.0`
-- [ ] Prepare interview explanation
-- [ ] Prepare 5-minute demo
-- [ ] Prepare 10-minute demo
+- [x] Prepare interview explanation
+- [x] Prepare 5-minute demo
+- [x] Prepare 10-minute demo
 
 Final milestone:
 
