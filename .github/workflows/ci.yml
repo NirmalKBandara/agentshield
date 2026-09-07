@@ -72,7 +72,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Block on Semgrep findings
-        run: semgrep scan --config auto --error --metrics=off .
+        run: semgrep scan --config p/python --config p/typescript --error --metrics=off .
 
   secrets:
     runs-on: ubuntu-latest
