@@ -54,7 +54,7 @@ Requirements: Docker Engine with Docker Compose v2.
 
 ```bash
 cp .env.example .env
-docker compose up --build
+docker compose up --build --wait
 ```
 
 Open <http://localhost:3000>. The page calls the Next.js route
@@ -164,6 +164,7 @@ for the exact commands, PR flow, and recommended branch protection.
 - [Day 22 completion summary](docs/project/day-22-threat-model.md)
 - [Day 23 completion summary](docs/project/day-23-unit-integration-testing.md)
 - [Day 24 completion summary](docs/project/day-24-security-hardening.md)
+- [Day 25 completion summary](docs/project/day-25-docker-compose.md)
 
 ## License
 
