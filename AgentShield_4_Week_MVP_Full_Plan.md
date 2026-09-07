@@ -2288,13 +2288,13 @@ Document discovered issues and fixes.
 
 Tasks:
 
-- [ ] Backend Dockerfile
-- [ ] Frontend Dockerfile
-- [ ] PostgreSQL
-- [ ] Ollama integration or setup note
-- [ ] docker-compose
-- [ ] health checks
-- [ ] persistent database volume
+- [x] Backend Dockerfile
+- [x] Frontend Dockerfile
+- [x] PostgreSQL
+- [x] Ollama integration or setup note
+- [x] docker-compose
+- [x] health checks
+- [x] persistent database volume
 
 Definition of done:
 
