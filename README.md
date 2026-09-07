@@ -152,6 +152,7 @@ for the exact commands, PR flow, and recommended branch protection.
 - [Local development guide](docs/setup.md)
 - [Architecture and request flow](docs/architecture.md)
 - [STRIDE threat model](docs/threat-model.md)
+- [Security testing record](docs/security-testing.md)
 - [Database schema and migrations](docs/database.md)
 - [Git and GitHub guide](docs/git-workflow.md)
 - [Day 16 completion summary](docs/project/day-16-security-events.md)
@@ -162,6 +163,7 @@ for the exact commands, PR flow, and recommended branch protection.
 - [Day 21 completion summary](docs/project/day-21-ui-polish.md)
 - [Day 22 completion summary](docs/project/day-22-threat-model.md)
 - [Day 23 completion summary](docs/project/day-23-unit-integration-testing.md)
+- [Day 24 completion summary](docs/project/day-24-security-hardening.md)
 
 ## License
 

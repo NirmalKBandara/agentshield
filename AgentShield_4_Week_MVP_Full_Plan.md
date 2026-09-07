@@ -2269,16 +2269,16 @@ Do not chase a meaningless 100% coverage number.
 
 Test:
 
-- [ ] malformed JSON
-- [ ] huge values
-- [ ] unknown tools
-- [ ] missing IDs
-- [ ] SSRF encodings
-- [ ] log injection
-- [ ] prompt-injection variants
-- [ ] PII edge cases
-- [ ] bypass attempts
-- [ ] rate-limit behavior
+- [x] malformed JSON
+- [x] huge values
+- [x] unknown tools
+- [x] missing IDs
+- [x] SSRF encodings
+- [x] log injection
+- [x] prompt-injection variants
+- [x] PII edge cases
+- [x] bypass attempts
+- [x] rate-limit behavior
 
 Document discovered issues and fixes.
 
