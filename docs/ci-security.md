@@ -8,7 +8,7 @@ a blocking job.
 | --- | --- |
 | Backend | PostgreSQL migration, Ruff, and the complete backend test suite |
 | Frontend | Clean install, unit tests, ESLint, TypeScript, and production build |
-| Compose | Resolved Compose configuration must be valid |
+| Compose | Configuration, image builds, health-gated startup, and cross-service tests |
 | Semgrep | Python and TypeScript community rules; any finding fails the job |
 | Gitleaks | Full Git history is scanned; a detected secret fails the job |
 | Python audit | Runtime requirements are checked against vulnerability advisories |
