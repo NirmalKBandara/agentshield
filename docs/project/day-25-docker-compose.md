@@ -28,3 +28,5 @@ separately managed local Ollama service.
 
 The CI Compose job performs this runtime validation on every change, prints
 container logs on failure, and always removes its containers and test volume.
+The frontend probe performs a real `GET` because the Next.js health proxy does
+not expose a separate `HEAD` handler.
