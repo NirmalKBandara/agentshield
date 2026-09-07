@@ -25,3 +25,6 @@ RUN_INTEGRATION=1 python3 -m unittest tests.integration.test_stack
 The stack deliberately does not embed or download an LLM. `MODEL_PROVIDER=rules`
 keeps the demo reproducible and offline; `MODEL_PROVIDER=ollama` connects to a
 separately managed local Ollama service.
+
+The CI Compose job performs this runtime validation on every change, prints
+container logs on failure, and always removes its containers and test volume.
