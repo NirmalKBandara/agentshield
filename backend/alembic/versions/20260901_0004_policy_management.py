@@ -5,6 +5,7 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "20260901_0004"

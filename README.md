@@ -161,6 +161,7 @@ for the exact commands, PR flow, and recommended branch protection.
 - [Day 20 completion summary](docs/project/day-20-risk-engine.md)
 - [Day 21 completion summary](docs/project/day-21-ui-polish.md)
 - [Day 22 completion summary](docs/project/day-22-threat-model.md)
+- [Day 23 completion summary](docs/project/day-23-unit-integration-testing.md)
 
 ## License
 
