@@ -1,6 +1,6 @@
 # AgentShield
 
-AgentShield is an AI-agent security gateway. The Day 21 milestone delivers a
+AgentShield is an AI-agent security gateway. The v1.0.0 MVP delivers a
 working Next.js playground, FastAPI backend, PostgreSQL audit storage, a
 deny-by-default security gateway, and four controlled demo tools in a Docker
 Compose stack.
@@ -154,6 +154,12 @@ for the exact commands, PR flow, and recommended branch protection.
 - [STRIDE threat model](docs/threat-model.md)
 - [Security testing record](docs/security-testing.md)
 - [CI/CD security gates](docs/ci-security.md)
+- [Security controls](docs/security-controls.md)
+- [Attack scenarios](docs/attack-scenarios.md)
+- [REST API guide](docs/api.md)
+- [MVP limitations](docs/limitations.md)
+- [Demo and interview guide](docs/demo-guide.md)
+- [Product screenshots](docs/screenshots/README.md)
 - [Database schema and migrations](docs/database.md)
 - [Git and GitHub guide](docs/git-workflow.md)
 - [Day 16 completion summary](docs/project/day-16-security-events.md)
@@ -167,6 +173,7 @@ for the exact commands, PR flow, and recommended branch protection.
 - [Day 24 completion summary](docs/project/day-24-security-hardening.md)
 - [Day 25 completion summary](docs/project/day-25-docker-compose.md)
 - [Day 26 completion summary](docs/project/day-26-devsecops-security.md)
+- [Day 27 completion summary](docs/project/day-27-documentation.md)
 
 ## License
 

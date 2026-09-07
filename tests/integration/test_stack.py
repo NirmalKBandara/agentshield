@@ -42,7 +42,7 @@ class StackIntegrationTest(unittest.TestCase):
 
         matching = [call for call in calls if call["request_id"] == "integration-safe-1"]
         self.assertEqual(len(matching), 1)
-        self.assertEqual(matching[0]["status"], "success")
+        self.assertEqual(matching[0]["status"], "succeeded")
 
 
 if __name__ == "__main__":

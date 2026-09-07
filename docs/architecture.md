@@ -1,5 +1,10 @@
 # Architecture
 
+AgentShield is a modular monolith with a Next.js web boundary, FastAPI service,
+deterministic security gateway, private in-process tool registry, and PostgreSQL
+audit store. This keeps the side-effect authorization path small and testable
+while the MVP remains easy to run on one host.
+
 ## Runtime flow
 
 ```text
@@ -82,3 +87,32 @@ support-agent → issue_refund → BLOCK (TOOL_NOT_AUTHORIZED)
 A block returns HTTP 403, records a `tool_calls` row with `status=blocked`, adds
 a linked `security_events` row, and emits a structured warning. The dispatcher
 is never reached after a blocking decision.
+
+## Security decision pipeline
+
+```text
+trusted request context + untrusted prompt/model proposal
+                         │
+                         ▼
+  registry → prompt/PII/network → permission → policy/rate controls
+                         │
+                         ▼
+              normalized risk + reason codes
+                  │                 │
+                ALLOW             BLOCK
+                  │                 │
+          private dispatch      security event
+                  └──────── audit ───┘
+```
+
+Risk is explanatory: any blocking control denies the call regardless of the
+numeric threshold. See [security-controls.md](security-controls.md) for control
+contracts and [threat-model.md](threat-model.md) for trust boundaries.
+
+## Deployment view
+
+Compose provides separate unprivileged frontend and backend containers plus
+PostgreSQL with a persistent named volume. PostgreSQL health gates migrations
+and API startup; API readiness gates the frontend. The default rules provider
+is fully offline. Optional host Ollama is a decision provider only and cannot
+bypass the gateway.
